@@ -92,7 +92,7 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 
 ## CI/CD pipeline
 
-![CI/CD pipeline](docs/ci-pipeline.png)
+<img width="1302" height="738" alt="image" src="https://github.com/user-attachments/assets/c62260c7-7595-4fd6-8eb5-ac3fa2ad9208" />
 
 The pipeline runs on every commit/push and is split into four jobs, with the later jobs gated behind the security checks of the earlier ones — no image reaches AWS without passing static analysis and container scanning first.
 
