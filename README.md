@@ -90,9 +90,40 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 - **Cloud**: AWS (IoT Core, SQS, Lambda, DynamoDB, S3, CloudFront, IAM, SSM, ACM, CloudWatch, CloudTrail)
 - **Local observability**: Prometheus + Grafana
 
+## CI/CD pipeline
+
+![CI/CD pipeline](docs/ci-pipeline.png)
+
+The pipeline runs on every commit/push and is split into four jobs, with the later jobs gated behind the security checks of the earlier ones — no image reaches AWS without passing static analysis and container scanning first.
+
+### Job 1 — Build
+- Builds the three service images (`public-panel-svc`, `watch-telemetry-svc`, `storage-service`) using **CMake**.
+- All three images are rebuilt on every commit, even if only one changed. This favors simplicity and consistency over build speed for a personal project — a future optimization would be to use a path-based build matrix so only the changed image is rebuilt.
+- Two downstream jobs (Job 2 and Job 3) branch off Job 1 and run in parallel.
+
+### Job 2 — SAST
+- Runs **Semgrep** against the source code for pattern-based static security analysis (SAST), including C/C++-specific rulesets.
+- *Optional complement*: for deeper C++-specific static analysis (undefined behavior, memory issues, pointer misuse) not fully covered by Semgrep's generic ruleset, **cppcheck** and/or **clang-tidy** can be added as an extra step here.
+
+### Job 3 — Container scan
+Two steps, both powered by **Trivy**:
+1. **Vulnerability scan** of the built container image.
+2. **SBOM check** — generation/validation of the Software Bill of Materials (CycloneDX/SPDX), so every library shipped inside the image is tracked and auditable for known vulnerabilities.
+
+### Job 4 — Release (depends on Job 2 **and** Job 3 passing)
+1. **Push image** to the container registry.
+2. **`terraform plan`/`apply`** against AWS, authenticated via OIDC (no static AWS credentials).
+3. **Deploy to Lambda** — the updated container image is published as the new Lambda function version.
+
+> Implementation note: since each service runs as a C++ binary inside a Lambda container image, the binary must implement (or wrap) the **Lambda Runtime API** — it is not a regular standalone binary. The `aws-lambda-cpp` library (AWS Labs) provides this runtime loop for C++.
+
+---
+
 ## Next steps
 
-- [ ] Detailed CI/Terraform pipeline diagram
+- [x] Detailed CI/Terraform pipeline diagram
 - [ ] Certificate rotation policy (mTLS) for devices
 - [ ] Lightweight anomaly detection (IDS) rules in `store-car-svc`
 - [ ] Admission controller (OPA/Gatekeeper) in the cluster
+- [ ] Path-based build matrix in Job 1 (only rebuild the image that changed)
+- [ ] Manual approval gate (GitHub Environments) before `terraform apply` in Job 4
