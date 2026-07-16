@@ -2,7 +2,7 @@
 
 A simulated vehicle telemetry platform built to demonstrate **Zero-Trust security** principles, **IoT/embedded systems**, and **DevSecOps** practices on top of AWS Free Tier, Kubernetes, and Terraform.
 
-<img width="1045" height="819" alt="Captura de tela de 2026-07-15 23-16-13" src="https://github.com/user-attachments/assets/dae105d6-fc60-49cb-a2dd-b98a3aaa3194" />
+<img width="1054" height="826" alt="image" src="https://github.com/user-attachments/assets/d953b9d8-7bbe-4200-b31d-c251c4f30880" />
 
 ## Overview
 
