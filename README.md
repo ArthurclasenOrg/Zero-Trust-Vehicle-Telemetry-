@@ -2,7 +2,7 @@
 
 A simulated vehicle telemetry platform built to demonstrate **Zero-Trust security** principles, **IoT/embedded systems**, and **DevSecOps** practices on top of AWS Free Tier, Kubernetes, and Terraform.
 
-![Architecture](docs/architecture.png)
+<img width="1054" height="826" alt="image" src="https://github.com/user-attachments/assets/d953b9d8-7bbe-4200-b31d-c251c4f30880" />
 
 ## Overview
 
@@ -86,7 +86,7 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 - **Embedded language**: C++ (ECU simulation)
 - **IaC**: Terraform
 - **CI/CD**: GitHub Actions (OIDC → AWS)
-- **Orchestration**: Kubernetes (local kind/k3d)
+- **Orchestration**: Kubernetes (local minikube)
 - **Cloud**: AWS (IoT Core, SQS, Lambda, DynamoDB, S3, CloudFront, IAM, SSM, ACM, CloudWatch, CloudTrail)
 - **Local observability**: Prometheus + Grafana
 
