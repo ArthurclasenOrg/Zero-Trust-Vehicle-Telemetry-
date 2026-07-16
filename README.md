@@ -2,7 +2,7 @@
 
 A simulated vehicle telemetry platform built to demonstrate **Zero-Trust security** principles, **IoT/embedded systems**, and **DevSecOps** practices on top of AWS Free Tier, Kubernetes, and Terraform.
 
-<img width="1054" height="826" alt="image" src="https://github.com/user-attachments/assets/d953b9d8-7bbe-4200-b31d-c251c4f30880" />
+![Architecture](docs/architecture.png)
 
 ## Overview
 
@@ -42,6 +42,15 @@ Three Lambda functions, each with a single responsibility:
 | `store-car-svc` | Consumes SQS, validates schema/anomalies, writes the current state to DynamoDB and the raw payload to S3 |
 | `watch-telemetry-svc` | Exposes telemetry reads to authorized consumers |
 | `public-panel-svc` | Serves aggregated/public data to the external dashboard |
+
+**Invocation model — event-driven vs. request-driven:**
+
+| Lambda | Invocation |
+|---|---|
+| `store-car-svc` | **Event-driven** — triggered automatically via an SQS **Event Source Mapping**. AWS polls the queue and invokes the function directly; it is never called through the Gateway. |
+| `watch-telemetry-svc` / `public-panel-svc` | **Request-driven** — invoked via the Kubernetes Gateway, through an `ExternalName Service` pointing to each function's Lambda Function URL. |
+
+This distinction matters: the Gateway only handles external read traffic. It never touches SQS. The `store-car-svc` function is the queue's sole consumer, wired directly to it through the event source mapping (configured as `aws_lambda_event_source_mapping` in Terraform) — no additional component is needed to "drain" the queue.
 
 **DynamoDB vs. S3 — role difference:**
 - **DynamoDB**: stores the **current state** of each vehicle (one item per `vehicle_id`, overwritten on every new message). This is what the public dashboard queries — fast, cheap key-based reads.
@@ -98,7 +107,7 @@ The pipeline runs on every commit/push and is split into four jobs, with the lat
 
 ### Job 1 — Build
 - Builds the three service images (`public-panel-svc`, `watch-telemetry-svc`, `storage-service`) using **CMake**.
-- All three images are rebuilt on every commit, even if only one changed. This favors simplicity and consistency over build speed for a personal project — a future optimization would be to use a path-based build matrix so only the changed image is rebuilt.
+- Uses a **path-based build matrix**: only the image(s) whose source path changed in the commit are rebuilt, instead of always rebuilding all three.
 - Two downstream jobs (Job 2 and Job 3) branch off Job 1 and run in parallel.
 
 ### Job 2 — SAST
@@ -111,19 +120,25 @@ Two steps, both powered by **Trivy**:
 2. **SBOM check** — generation/validation of the Software Bill of Materials (CycloneDX/SPDX), so every library shipped inside the image is tracked and auditable for known vulnerabilities.
 
 ### Job 4 — Release (depends on Job 2 **and** Job 3 passing)
-1. **Push image** to the container registry.
-2. **`terraform plan`/`apply`** against AWS, authenticated via OIDC (no static AWS credentials).
-3. **Deploy to Lambda** — the updated container image is published as the new Lambda function version.
+1. **TEST** — basic functional/integration tests against the built binary (e.g., simulated sample requests) before promoting anything further.
+2. **Push image** to the container registry.
+3. **Required reviewers** — manual approval gate; a human must approve before the pipeline is allowed to touch AWS infrastructure.
+4. **Terrascan** — static security/misconfiguration scan of the Terraform files (the "SAST" equivalent for infrastructure-as-code — catches things like overly permissive security groups, unencrypted buckets, or over-broad IAM policies).
+5. **Terratest** — dynamic IaC testing (Go-based): actually provisions the infrastructure in a test environment, validates it behaves as expected, then tears it down. Complements Terrascan's static analysis with real runtime verification.
+6. **`terraform plan`/`apply`** against AWS, authenticated via OIDC (no static AWS credentials).
+7. **Deploy image (binary) to Lambda** — the updated container image is published as the new Lambda function version.
 
 > Implementation note: since each service runs as a C++ binary inside a Lambda container image, the binary must implement (or wrap) the **Lambda Runtime API** — it is not a regular standalone binary. The `aws-lambda-cpp` library (AWS Labs) provides this runtime loop for C++.
+>
+> Cost note: Terratest provisions real AWS resources, even if temporarily. Since it consumes free-tier/credit quota, consider running it selectively (e.g., only on pull requests to the main branch) rather than on every commit.
 
 ---
 
 ## Next steps
 
 - [x] Detailed CI/Terraform pipeline diagram
+- [x] Path-based build matrix in Job 1 (only rebuild the image that changed)
+- [x] Manual approval gate (required reviewers) before `terraform apply` in Job 4
 - [ ] Certificate rotation policy (mTLS) for devices
 - [ ] Lightweight anomaly detection (IDS) rules in `store-car-svc`
 - [ ] Admission controller (OPA/Gatekeeper) in the cluster
-- [ ] Path-based build matrix in Job 1 (only rebuild the image that changed)
-- [ ] Manual approval gate (GitHub Environments) before `terraform apply` in Job 4
