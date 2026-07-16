@@ -2,7 +2,7 @@
 
 A simulated vehicle telemetry platform built to demonstrate **Zero-Trust security** principles, **IoT/embedded systems**, and **DevSecOps** practices on top of AWS Free Tier, Kubernetes, and Terraform.
 
-![Architecture](docs/architecture.png)
+<img width="970" height="827" alt="Captura de tela de 2026-07-16 15-52-21" src="https://github.com/user-attachments/assets/865c7472-2ef0-4ac0-89d5-bee949ee4c42" />
 
 ## Overview
 
@@ -101,7 +101,7 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 
 ## CI/CD pipeline
 
-<img width="1302" height="738" alt="image" src="https://github.com/user-attachments/assets/c62260c7-7595-4fd6-8eb5-ac3fa2ad9208" />
+<img width="1686" height="727" alt="Captura de tela de 2026-07-16 15-13-45" src="https://github.com/user-attachments/assets/68f55db1-50fe-4a21-842e-143bc5e2d433" />
 
 The pipeline runs on every commit/push and is split into four jobs, with the later jobs gated behind the security checks of the earlier ones — no image reaches AWS without passing static analysis and container scanning first.
 
