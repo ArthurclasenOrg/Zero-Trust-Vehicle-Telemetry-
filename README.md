@@ -86,7 +86,7 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 - **Embedded language**: C++ (ECU simulation)
 - **IaC**: Terraform
 - **CI/CD**: GitHub Actions (OIDC → AWS)
-- **Orchestration**: Kubernetes (local kind/k3d)
+- **Orchestration**: Kubernetes (local minikube)
 - **Cloud**: AWS (IoT Core, SQS, Lambda, DynamoDB, S3, CloudFront, IAM, SSM, ACM, CloudWatch, CloudTrail)
 - **Local observability**: Prometheus + Grafana
 
