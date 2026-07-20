@@ -95,7 +95,7 @@ Hosts the routing and observability layer — it does **not** host the Lambdas, 
 - **Embedded language**: C++ (ECU simulation)
 - **IaC**: Terraform
 - **CI/CD**: GitHub Actions (OIDC → AWS)
-- **Orchestration**: Kubernetes (local minikube)
+- **Orchestration**: Kubernetes (local kind/k3d)
 - **Cloud**: AWS (IoT Core, SQS, Lambda, DynamoDB, S3, CloudFront, IAM, SSM, ACM, CloudWatch, CloudTrail)
 - **Local observability**: Prometheus + Grafana
 
@@ -133,6 +133,35 @@ Two steps, both powered by **Trivy**:
 > Cost note: Terratest provisions real AWS resources, even if temporarily. Since it consumes free-tier/credit quota, consider running it selectively (e.g., only on pull requests to the main branch) rather than on every commit.
 
 ---
+
+## Access control (IAM groups)
+
+Three IAM groups exist for team members working on the project, separate from the service-to-service roles (e.g. the Lambda execution role, the IoT Rule role) used internally by AWS services:
+
+| Group | Read | Write / manage | Explicitly denied |
+|---|---|---|---|
+| **developers** | Telemetry data (`dynamodb:GetItem`/`Query`, `s3:GetObject`/`ListBucket`); CloudWatch Logs | Invoke Lambda functions for manual testing | Any `Update`/`Delete`/`Put` on any resource; `iam:*`; `dynamodb:Scan` |
+| **auditors** | CloudTrail events; CloudWatch alarms/metrics; CloudWatch Logs; IAM policies/roles (read-only, to audit permissions) | *(none — fully read-only, including over IAM itself)* | Any access to telemetry data (DynamoDB/S3) — separation of duties; any write anywhere |
+| **cloud_managers** | Certificate/parameter metadata | SSM Parameter Store; KMS keys; ACM certificates; IoT Core device certificates/policies; Lambda **configuration** (memory, timeout, env vars); DynamoDB table capacity; SQS queue attributes | `lambda:UpdateFunctionCode` (code only ships through the CI/CD pipeline, never manually); `iam:*`; any read/write of telemetry data itself |
+
+Two rules apply across all three groups:
+- **No group can modify IAM.** Only the OIDC role assumed by GitHub Actions can — and even that goes through the `required reviewers` gate in Job 4. This prevents any human group from self-escalating privilege.
+- **No group can push Lambda code directly.** `cloud_managers` can change a function's configuration, but the binary itself only reaches production through the CI/CD pipeline (SAST, container scan, and SBOM checks all have to pass first).
+
+
+
+## Access control (service roles)
+
+Separate from the human IAM groups above, each service that touches data has its own least-privilege execution role:
+
+| Service | DynamoDB | S3 | SQS | Notes |
+|---|---|---|---|---|
+| **`store-car-svc`** | `PutItem` (writes current state) | `PutObject` (archives raw history) | `ReceiveMessage`, `DeleteMessage`, `GetQueueAttributes` (consumes via Event Source Mapping) | The only Lambda with write access anywhere |
+| **`watch-telemetry-svc`** | `GetItem`, `Query` (latest reading only, by `vehicle_id`) | none | none | Real-time read only — no historical data |
+| **`public-panel-svc`** | `GetItem`, `Query` (public/portfolio-facing, values may be encrypted) | `GetObject`, `ListBucket` (full history, for portfolio visitors to explore) | none | Read-only |
+| **IoT Rule role** | none | none | `sqs:SendMessage` only | Pure message relay — never touches application data directly |
+
+No Lambda holds any `acm:*` permission — the ACM certificate is only referenced by CloudFront's own resource configuration, never called by application code. `dynamodb:Scan` and any `Delete*` action are denied everywhere in this layer.
 
 ## Next steps
 
