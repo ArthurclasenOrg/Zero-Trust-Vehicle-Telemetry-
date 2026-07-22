@@ -25,13 +25,24 @@ resource "aws_iam_role_policy" "store_car_policy" {
         Version = "2012-10-17"
         Statement = [
             {
-                # Storage allowance (store-car only stores data)
+                # Storage allowance DynamoDB (store-car only stores data)
                 Action = [
-                    "dynamodb:PutItem",
-                    "s3:PutObject"
+                    "dynamodb:PutItem"
                 ]
                 Effect = "Allow"
                 Resource = "*"
+            },
+            {   # using here (/raw) to store the exact data (private and encrypted, limited to this service)
+                Sid    = "S3WriteRaw"
+                Action = ["s3:PutObject"]
+                Effect = "Allow"
+                Resource = "arn:aws:s3:::${var.bucket_arn}/raw/*"
+            },
+            {
+                Sid    = "S3WritePublicHistory"
+                Action = ["s3:PutObject"]
+                Effect = "Allow"
+                Resource = "arn:aws:s3:::${var.bucket_arn}/public-history/*"
             },
             {
                 # SQS allowance (receive and delete messages + get queue attributes)
@@ -129,15 +140,21 @@ resource "aws_iam_role_policy" "public_panel_policy" {
                 Effect = "Allow"
                 Resource = "*"
             },
-            {
-                # Bucket permissions (to whoever sees the project can visualize all the data (including history))
-                Action = [
-                    "s3:GetObject",
-                    "s3:ListBucket"
-                ]
+            {   # using here (/public-history) to expose data to anyone who wants to see the portifolio (pseudonymous data)
+                Sid    = "S3ReadPublicHistoryOnly"
+                Action = ["s3:GetObject"]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = "arn:aws:s3:::${var.bucket_arn}/public-history/*"
             },
+                {
+                Sid    = "S3ListPublicHistoryOnly"
+                Action = ["s3:ListBucket"]
+                Effect = "Allow"
+                Resource = "arn:aws:s3:::${var.bucket_arn}"
+                Condition = {
+                    StringLike = { "s3:prefix" = "public-history/*" }
+                }
+            }
         ]
     })
 }
