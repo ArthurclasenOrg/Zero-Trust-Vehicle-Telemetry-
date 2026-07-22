@@ -1,5 +1,4 @@
 # store-car-service role_id
-# TODO : I MUST CONFIGURE THE RESOURCES WHEN I DEPLOY OTHER SERVICES (FOR NOW WE HAVE Resource = "*")
 resource "aws_iam_role" "store_car_svc_role" {
   name = "store_car_svc_role"
 
@@ -30,19 +29,19 @@ resource "aws_iam_role_policy" "store_car_policy" {
                     "dynamodb:PutItem"
                 ]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = var.db_state_arn
             },
             {   # using here (/raw) to store the exact data (private and encrypted, limited to this service)
                 Sid    = "S3WriteRaw"
                 Action = ["s3:PutObject"]
                 Effect = "Allow"
-                Resource = "arn:aws:s3:::${var.bucket_arn}/raw/*"
+                Resource = "${var.bucket_arn}/raw/*"
             },
             {   # using here (/public-history) to write on bucket for public visit
                 Sid    = "S3WritePublicHistory"
                 Action = ["s3:PutObject"]
                 Effect = "Allow"
-                Resource = "arn:aws:s3:::${var.bucket_arn}/public-history/*"
+                Resource = "${var.bucket_arn}/public-history/*"
             },
             {
                 # SQS allowance (receive and delete messages + get queue attributes)
@@ -52,7 +51,7 @@ resource "aws_iam_role_policy" "store_car_policy" {
                     "sqs:GetQueueAttributes"
                 ]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = var.queue_arn
             },
         ]
     })
@@ -95,7 +94,8 @@ resource "aws_iam_role_policy" "watch_telemetry_policy" {
                     "dynamodb:Query"
                 ]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = [var.db_state_arn,
+                            "${var.db_state_arn}/index/*"]
             },
         ]
     })
@@ -138,19 +138,19 @@ resource "aws_iam_role_policy" "public_panel_policy" {
                     "dynamodb:Query"
                 ]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = var.db_public_arn
             },
             {   # using here (/public-history) to expose data to anyone who wants to see the portifolio (pseudonymous data)
                 Sid    = "S3ReadPublicHistoryOnly"
                 Action = ["s3:GetObject"]
                 Effect = "Allow"
-                Resource = "arn:aws:s3:::${var.bucket_arn}/public-history/*"
+                Resource = "${var.bucket_arn}/public-history/*"
             },
                 {
                 Sid    = "S3ListPublicHistoryOnly"
                 Action = ["s3:ListBucket"]
                 Effect = "Allow"
-                Resource = "arn:aws:s3:::${var.bucket_arn}"
+                Resource = var.bucket_arn
                 Condition = {
                     StringLike = { "s3:prefix" = "public-history/*" }
                 }
@@ -195,7 +195,7 @@ resource "aws_iam_role_policy" "iot_policy" {
                     "sqs:SendMessage"
                 ]
                 Effect = "Allow"
-                Resource = "*"
+                Resource = var.queue_arn
             }
         ]
     })
