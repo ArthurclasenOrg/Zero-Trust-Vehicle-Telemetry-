@@ -1,4 +1,5 @@
 # store-car-service role_id
+# TODO : I MUST CONFIGURE THE RESOURCES WHEN I DEPLOY OTHER SERVICES (FOR NOW WE HAVE Resource = "*")
 resource "aws_iam_role" "store_car_svc_role" {
   name = "store_car_svc_role"
 

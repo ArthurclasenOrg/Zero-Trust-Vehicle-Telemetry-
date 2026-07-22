@@ -1,4 +1,5 @@
 # Groups (developers and auditors)
+# TODO : I MUST CONFIGURE THE RESOURCES WHEN I DEPLOY OTHER SERVICES (FOR NOW WE HAVE Resource = "*")
 resource "aws_iam_group" "developers" {
     name = "developers"
     path = "/users/"
