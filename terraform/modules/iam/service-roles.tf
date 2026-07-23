@@ -200,3 +200,9 @@ resource "aws_iam_role_policy" "iot_policy" {
         ]
     })
 }
+
+# logs for IoT core
+resource "aws_iam_role_policy_attachment" "iot_logs" {
+  role       = aws_iam_role.iot_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}

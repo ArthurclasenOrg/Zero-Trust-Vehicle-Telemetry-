@@ -34,3 +34,9 @@ module "lambda" {
   project_name = var.project_name
 }
 
+module "iotcore" {
+  source = "./modules/iotcore"
+  iot_role_arn = module.iam.iot_role_arn
+  aws_region = var.aws_region
+  queue_url = module.sqs.sqs_url
+}
