@@ -40,3 +40,7 @@ module "iotcore" {
   aws_region = var.aws_region
   queue_url = module.sqs.sqs_url
 }
+
+module "cloudtrail" {
+  source = "./modules/cloudtrail"
+}
