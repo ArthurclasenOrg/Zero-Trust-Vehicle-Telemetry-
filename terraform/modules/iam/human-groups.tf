@@ -54,6 +54,7 @@ resource "aws_iam_group_policy" "dev_policies" {
                 Sid = "InvokeForTesting"
                 Action = [
                     "lambda:InvokeFunction",
+                    "lambda:InvokeFunctionUrl",
                     "lambda:GetFunction",
                     "lambda:ListFunctions"
                 ]

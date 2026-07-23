@@ -23,3 +23,14 @@ module "iam" {
   db_state_arn = module.dynamodb.db_state_arn
 }
 
+module "lambda" {
+  source = "./modules/lambda"
+  public_panel_role_arn = module.iam.public_panel_role_arn
+  store_car_svc_role_arn = module.iam.store_car_svc_role_arn
+  watch_telemetry_role_arn = module.iam.watch_telemetry_role_arn
+  bucket_arn = module.s3.bucket_arn
+  queue_arn = module.sqs.sqs_arn
+  aws_account_id = var.aws_account_id
+  project_name = var.project_name
+}
+

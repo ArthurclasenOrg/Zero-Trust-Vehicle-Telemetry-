@@ -10,3 +10,8 @@ variable "project_name" {
   default = "zero-trust-vehicle-telemetry"
 }
 
+variable "aws_account_id" {
+  type = string
+  description = "AWS account ID"
+  sensitive = true
+}
