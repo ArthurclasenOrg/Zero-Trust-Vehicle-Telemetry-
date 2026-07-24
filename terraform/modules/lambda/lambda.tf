@@ -101,7 +101,23 @@ resource "aws_lambda_function_url" "public_panel_svc_url" {
   authorization_type = "NONE"
 
   cors {  # allowing CloudFront (only cloudfront) to access public panel svc
-    allow_origins = ["https://CLOUDFRONT-DOMAIN"]
+    allow_origins = ["*"]
     allow_methods = ["GET"]
   }
+}
+
+resource "aws_lambda_permission" "public_panel_url_public_access" {
+  statement_id           = "AllowPublicFunctionUrlInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.public_panel_svc.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "public_panel_invoke_function" {
+  statement_id  = "AllowPublicInvokeFunction"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.public_panel_svc.function_name
+  principal     = "*"
+  # sem condition — o provider ainda não suporta o InvokedViaFunctionUrl (issue aberta no terraform-provider-aws)
 }

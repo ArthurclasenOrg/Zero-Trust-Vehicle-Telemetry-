@@ -33,7 +33,6 @@ module "iam" {
 module "lambda" {
   source = "./modules/lambda"
 
-
   # to define the roles on each func
   public_panel_role_arn = module.iam.public_panel_role_arn
   store_car_svc_role_arn = module.iam.store_car_svc_role_arn
@@ -74,4 +73,10 @@ module "cloudwatch" {
   public_panel_func_name = local.public_panel_func_name
   store_car_func_name = local.store_car_func_name
   watch_telemetry_func_name = local.watch_telemetry_func_name
+}
+
+module "cloudfront" {
+  source = "./modules/cloudfront"
+  public_pannel_svc_function_url = module.lambda.public_panel_svc_function_url
+  project_name = var.project_name
 }
