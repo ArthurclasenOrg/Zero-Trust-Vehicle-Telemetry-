@@ -196,13 +196,17 @@ resource "aws_iam_role_policy" "iot_policy" {
                 ]
                 Effect = "Allow"
                 Resource = var.queue_arn
+            },
+            {
+                Effect = "Allow"
+                Action = [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams"
+                ]
+                Resource = var.cloudwatch_log_group_iot_arn
             }
         ]
     })
-}
-
-# logs for IoT core
-resource "aws_iam_role_policy_attachment" "iot_logs" {
-  role       = aws_iam_role.iot_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

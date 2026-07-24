@@ -7,7 +7,7 @@ locals {
 
 # store-car-svc
 resource "aws_lambda_function" "store_car_svc" {
-  function_name = "store_car_svc"
+  function_name = var.store_car_func_name
   role = var.store_car_svc_role_arn
   package_type = "Image" # defining this as a running container image function
   image_uri = local.placeholder_image
@@ -26,6 +26,8 @@ resource "aws_lambda_function" "store_car_svc" {
   tags = {
     Project = var.project_name
   }
+
+  depends_on = [ var.store_car_svc_logs ]
 }
 
 # evente source mapping for store-car-svc, since it's waiting for get data from queue
@@ -41,7 +43,7 @@ resource "aws_lambda_event_source_mapping" "queue_event" {
 
 # watch-telemetry-svc
 resource "aws_lambda_function" "watch_telemetry_svc" {
-  function_name = "watch_telemetry_svc"
+  function_name = var.watch_telemetry_func_name
   role = var.watch_telemetry_role_arn
   package_type = "Image" # defining this as a running container image function
   image_uri = local.placeholder_image
@@ -60,6 +62,8 @@ resource "aws_lambda_function" "watch_telemetry_svc" {
   tags = {
     Project = var.project_name
   }
+
+  depends_on = [ var.watch_telemetry_svc_logs ]
 }
 
 resource "aws_lambda_function_url" "watch_telemetry_svc_url" {
@@ -69,7 +73,7 @@ resource "aws_lambda_function_url" "watch_telemetry_svc_url" {
 
 # public-panel-svc
 resource "aws_lambda_function" "public_panel_svc" {
-  function_name = "public_panel_svc"
+  function_name = var.public_panel_func_name
   role = var.public_panel_role_arn
   package_type = "Image" # defining this as a running container image function
   image_uri = local.placeholder_image
@@ -88,6 +92,8 @@ resource "aws_lambda_function" "public_panel_svc" {
   tags = {
     Project = var.project_name
   }
+
+  depends_on = [ var.public_panel_svc_logs ]
 }
 
 resource "aws_lambda_function_url" "public_panel_svc_url" {

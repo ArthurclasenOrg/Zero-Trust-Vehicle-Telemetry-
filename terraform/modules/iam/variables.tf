@@ -26,4 +26,10 @@ variable "queue_arn" {
   description = "ARN of the sqs (not the dead letter one)"
 }
 
+# iot cloudwatch log group
+variable "cloudwatch_log_group_iot_arn" {
+  type = string
+  description = "ARN of cloudwatch log group of IoT"
+}
+
 

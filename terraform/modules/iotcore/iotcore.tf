@@ -76,5 +76,11 @@ resource "aws_iot_topic_rule" "telemetry_to_sqs" {
   }
 }
 
+# logs for iot
+resource "aws_iot_logging_options" "iot_logs" {
+  role_arn = var.iot_role_arn
+  default_log_level = "ERROR"
+}
+
 
 
