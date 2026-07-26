@@ -39,6 +39,7 @@ resource "aws_lambda_event_source_mapping" "queue_event" {
   scaling_config {
     maximum_concurrency = 5
   }
+  enabled = false # TURNING OFF DURING LOCAL TESTS
 }
 
 # watch-telemetry-svc

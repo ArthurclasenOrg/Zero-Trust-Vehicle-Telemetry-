@@ -1,6 +1,24 @@
 # certificates and keys
 cert_and_keys/
 
+# libs from remote repositories
+src/lib
+
+# build artifacts
+build/
+*.o
+*.out
+cmake-build-*/
+
+# storage-service build artifacts
+src/storage-service/CMakeFiles/
+src/storage-service/CMakeCache.txt
+src/storage-service/cmake_install.cmake
+src/storage-service/storage_service
+
+# environment
+*.env
+
 # IDE
 .vscode/
 .idea/

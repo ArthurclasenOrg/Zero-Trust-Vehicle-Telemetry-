@@ -1,0 +1,126 @@
+#include "handler.hpp"
+#include "queue.hpp"
+
+using namespace std; 
+
+Handler::Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration clientConfig)
+    : queueUrl(queueUrl),
+      clientConfig(clientConfig),
+      sqs(make_unique<Aws::SQS::SQSClient>(clientConfig)),
+      queue() {}
+
+// processing queue (it returns the message object with receiptHandle and body data)
+optional<const Aws::SQS::Model::Message> Handler::processSQSQueue()
+{
+    // configuring the request to push to 1 message
+    Aws::SQS::Model::ReceiveMessageRequest request;
+
+    request.SetQueueUrl(this->queueUrl);
+    request.SetMaxNumberOfMessages(1);
+    request.SetWaitTimeSeconds(5); // polling of 5 seconds
+
+    // call to SQS
+    auto outcome = this->sqs->ReceiveMessage(request);
+    
+    if (outcome.IsSuccess()){ // if I receive messages
+        const auto& messages = outcome.GetResult().GetMessages();
+
+        if (!messages.empty()){ // if the message is not empty
+            const auto& message = messages[0];
+            // returning message (with body and receipt handle)
+            return message;
+        } else {
+            cout << "No messages on queue" << endl;
+        }
+    } else {
+        cerr << "Error on searching message: " << outcome.GetError().GetMessage() << endl;
+    }
+    return nullopt; // empty object 
+}
+
+unique_ptr<VehicleTelemetryState> Handler::parseJsonToPointer(const Aws::String& jsonBody)
+{
+    Aws::Utils::Json::JsonValue jsonValue(jsonBody);
+
+    if (!jsonValue.WasParseSuccessful()){   // in case it wasn't correctly parsed
+        cerr << "Error on realizing parse on JSON" << endl;
+        return nullptr;
+    }
+
+    Aws::Utils::Json::JsonView view = jsonValue.View();
+
+    // creating the object in the memory heap using smart pointer
+    auto data = std::make_unique<VehicleTelemetryState>();
+
+    // extracting JSON fields to the pointer to the data object
+    if (view.ValueExists("vehicle_id"))         data->vehicle_id         = view.GetString("vehicle_id");       
+    if (view.ValueExists("status"))             data->status             = view.GetString("status");
+    if (view.ValueExists("speed_kph"))          data->speed_kph          = view.GetDouble("speed_kph");
+    if (view.ValueExists("rpm"))                data->rpm                = view.GetInteger("rpm");
+    if (view.ValueExists("engine_temp_c"))      data->engine_temp_c      = view.GetDouble("engine_temp_c");
+    if (view.ValueExists("diagnostic_code"))    data->diagnostic_code    = view.GetString("diagnostic_code");
+    if (view.ValueExists("schema_version"))     data->schema_version     = view.GetInteger("schema_version");
+    if (view.ValueExists("last_seen_epoch_ms")) data->last_seen_epoch_ms = view.GetInt64("last_seen_epoch_ms");
+
+    return data; // returning the smart pointer with the data correctly allocated
+}
+
+void Handler::deleteMessage(Aws::String receiptHandle)
+{
+    Aws::SQS::Model::DeleteMessageRequest deleteRequest;
+    deleteRequest.SetQueueUrl(this->queueUrl);  // deleting message from this queue
+    deleteRequest.SetReceiptHandle(receiptHandle);
+
+    auto deleteOutcome = sqs->DeleteMessage(deleteRequest); // deleting message
+    if (deleteOutcome.IsSuccess()){     // if success on deleting
+        cout << "Message removed from queue with success!" << endl;
+    }
+}
+
+// polling for thread 1 (consumer from sqs and producer of vehicle data for thread 2)
+void Handler::startPolling()
+{
+    cout << "Initializing SQS Polling (Ctrl+C) to stop" << endl;
+
+    while (true) {
+        // get json from sqs
+        auto messageOpt = this->processSQSQueue();
+    
+        // if it catches something, process
+        if (messageOpt.has_value()) {
+            const auto& message = messageOpt.value();
+            unique_ptr<VehicleTelemetryState> vehicle = parseJsonToPointer(message.GetBody());
+
+            if (vehicle) {
+                // creating message to put on queue
+                SqsMessageWrapper vehicleDataMessage;
+                vehicleDataMessage.receiptHandle = message.GetReceiptHandle();
+                vehicleDataMessage.vehicleData = move(vehicle);
+                queue.produce(move(vehicleDataMessage));
+            }
+        }
+    }
+}
+
+// thread 2 deals with the rest of the job (detect anomaly->write on dynamoDB and S3->delete data from sqs) 
+void Handler::handleVehicleData()
+{
+    cout << "Initializing Data Consumption" << endl;
+
+    while (true) {
+        SqsMessageWrapper message;
+        queue.consume(message); // consuming message from queue
+        
+        // prints vehicle data information and receipt handle
+        cout << message.vehicleData->toString() << endl;
+        cout << message.receiptHandle << endl;
+        
+        // TODO 
+        // 1. Put on the anomaly detector
+        // 2. Write on dynamoDB 
+        // 3. Write on S3 Bucket
+
+        this->deleteMessage(message.receiptHandle);
+        cout << "Deleted Message with success" << endl;
+    }
+}
