@@ -28,7 +28,6 @@ bool Queue::consume(SqsMessageWrapper& vehicleDataOut)
 }
 
 // finish queue
-/* (this function will be used after...)
 void Queue::finish()
 {
     {
@@ -37,4 +36,3 @@ void Queue::finish()
     }
     cv.notify_all(); // unlocks the consumer if waiting
 }
-*/ 
