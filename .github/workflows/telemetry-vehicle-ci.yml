@@ -71,11 +71,7 @@ jobs:
         # Dir to check src/
         run: |
           echo "Starting scan with Cppcheck..."
-          cppcheck --enable=all \                       
-                   --suppress=missingIncludeSystem \    
-                   -i src/lib/ \                        
-                   --error-exitcode=1 \                 
-                   src/                                 
+          cppcheck --enable=all --suppress=missingIncludeSystem -i src/lib/ --error-exitcode=1 src/                              
 
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
