@@ -13,7 +13,6 @@ jobs:
   build:
     name: Build Applications
     runs-on: ubuntu-latest # VM Linux
-    if: false # TURNING OFF JOB 1 TEMPORARILY
     strategy:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
@@ -46,12 +45,24 @@ jobs:
           # building dockerfile itself
           docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }} .
           
-          # TODO : SAVE IMAGE
+      # saving image
+      - name: Save Docker Image to Tar
+        if: steps.filter.outputs.changed == 'true'
+        run: docker save ztv-${{ matrix.service }}:${{ github.sha }} > ${{ matrix.service }}-image.tar
+
+      # upldoading image to actions
+      - name: Upload Image Artifact
+        if: steps.filter.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-${{ matrix.service }}
+          path: ${{ matrix.service }}-image.tar
+          retention-days: 1 # it doesn't keep image for more than 1 day
 
   # job 2: scanning code with semgrep and c++check
   code_scan:
     name: SAST Scanning
-    # needs: build # depends on building stage (job 1)
+    needs: build # depends on building stage (job 1)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -76,10 +87,35 @@ jobs:
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
     name: Image Scan and SBOM
-    # needs: build # also depends on job 1 (run in parallel with job 2)
+    needs: build # also depends on job 1 (run in parallel with job 2)
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # the same services from job 1
+        service: [storage-service, watch-telemetry-svc, public-panel-svc]
     steps:
-      - run: echo "Here is Trivy"
+        # downloading .tar from job 1
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-${{ matrix.service }}
+
+        # loading docker image from tar downloaded
+      - name: Load Docker Image
+        run: docker load < ${{ matrix.service }}-image.tar
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ztv-${{ matrix.service }}:${{ github.sha }}'
+          format: 'table'
+          # return 1 if it finds vulnerabilities because if pipeline fails (code 1)
+          exit-code: '1'
+          # focus on fixed problems
+          ignore-unfixed: 'true'
+          vuln-type: 'os,library'
+          # it doesn't allow code to have high and critical problems
+          severity: 'HIGH,CRITICAL'
 
   # job 4: final tests and realeasing code to the infrastructure 
   release:
