@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build Applications
     runs-on: ubuntu-latest # VM Linux
-    if: false # TURNING OFF JOB 1 TEMPORARILY 
+    if: false # TURNING OFF JOB 1 TEMPORARILY
     strategy:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
@@ -51,7 +51,7 @@ jobs:
   # job 2: scanning code with semgrep and c++check
   code_scan:
     name: SAST Scanning
-    needs: build # depends on building stage (job 1)
+    # needs: build # depends on building stage (job 1)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -80,7 +80,7 @@ jobs:
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
     name: Image Scan and SBOM
-    needs: build # also depends on job 1 (run in parallel with job 2)
+    # needs: build # also depends on job 1 (run in parallel with job 2)
     runs-on: ubuntu-latest
     steps:
       - run: echo "Here is Trivy"
