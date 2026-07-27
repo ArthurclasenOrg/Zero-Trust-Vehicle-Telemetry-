@@ -43,11 +43,8 @@ jobs:
         run: |
           echo "Mudanças detectadas em ${{ matrix.service }}. Iniciando build..."
           
-          # entering on service file specific from matrix
-          cd src/${{ matrix.service }}
-          
           # building dockerfile itself
-          docker build -f dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }}
+          docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }}
           
           # TODO : SAVE IMAGE
 
