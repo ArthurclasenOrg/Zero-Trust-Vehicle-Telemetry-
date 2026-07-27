@@ -39,12 +39,12 @@ jobs:
 
       # building the docker image
       - name: Build Docker Image
-        if: steps.filter.outcome.changed == 'true'
+        if: steps.filter.outputs.changed == 'true'
         run: |
-          echo "Mudanças detectadas em ${{ matrix.service }}. Iniciando build..."
+          echo "Changes detected on ${{ matrix.service }}. Starting build..."
           
           # building dockerfile itself
-          docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }}
+          docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }} .
           
           # TODO : SAVE IMAGE
 
