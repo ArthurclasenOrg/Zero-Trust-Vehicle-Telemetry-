@@ -29,7 +29,7 @@ jobs:
 
       # using an action to detect files changes
       - name: Check for path changes
-        uses: dorny/path-filter@v3
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
