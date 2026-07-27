@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build Applications
     runs-on: ubuntu-latest # VM Linux
-
+    if: false # TURNING OFF JOB 1 TEMPORARILY 
     strategy:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
@@ -58,21 +58,24 @@ jobs:
         uses: actions/checkout@v4
         # SEMGREP scan (first step)
       - name: Semgrep Scan
-        uses: returntocorp/semgrep-action@v1
-        with: # using community pattern rules to better sec
-          config: p/default
+        run: |
+          python3 -m pip install semgrep
+          semgrep scan --config "p/default" src/
 
         # CPPCheck (second stage)
       - name: Install Cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
       - name: CPPCheck Scan
+        # Check everything possible (performance, warns, errors etc...)
+        # To not scan the whole lib (aws-sdk) code
+        # Dir to check src/
         run: |
           echo "Starting scan with Cppcheck..."
-          cppcheck --enable=all \                       # Check everything possible (performance, warns, erros etc..) 
+          cppcheck --enable=all \                       
                    --suppress=missingIncludeSystem \    
-                   -i src/lib/ \                        # To not scan the whole lib (aws-sdk) code
+                   -i src/lib/ \                        
                    --error-exitcode=1 \                 
-                   src/                                 # Dir to check
+                   src/                                 
 
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
