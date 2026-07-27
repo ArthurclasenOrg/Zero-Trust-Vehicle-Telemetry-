@@ -1,0 +1,23 @@
+# ignoring env files
+*.env
+
+# ignoring local build files
+**/build/
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+
+# ignore IDEs
+.idea/
+.vscode/
+
+# ignore scripts
+**/tests/
+
+# ignoring exec
+**/storage_service
+
+
+
+
