@@ -54,7 +54,25 @@ jobs:
     needs: build # depends on building stage (job 1)
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Here is SEMGREP"
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        # SEMGREP scan (first step)
+      - name: Semgrep Scan
+        uses: returntocorp/semgrep-action@v1
+        with: # using community pattern rules to better sec
+          config: p/default
+
+        # CPPCheck (second stage)
+      - name: Install Cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: CPPCheck Scan
+        run: |
+          echo "Starting scan with Cppcheck..."
+          cppcheck --enable=all \                       # Check everything possible (performance, warns, erros etc..) 
+                   --suppress=missingIncludeSystem \    
+                   -i src/lib/ \                        # To not scan the whole lib (aws-sdk) code
+                   --error-exitcode=1 \                 
+                   src/                                 # Dir to check
 
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
