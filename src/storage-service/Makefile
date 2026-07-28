@@ -129,6 +129,54 @@ storage_service/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/build
 .PHONY : storage_service/fast
 
+src/anomaly_detector/anomaly_detector.o: src/anomaly_detector/anomaly_detector.cpp.o
+.PHONY : src/anomaly_detector/anomaly_detector.o
+
+# target to build an object file
+src/anomaly_detector/anomaly_detector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/anomaly_detector/anomaly_detector.cpp.o
+.PHONY : src/anomaly_detector/anomaly_detector.cpp.o
+
+src/anomaly_detector/anomaly_detector.i: src/anomaly_detector/anomaly_detector.cpp.i
+.PHONY : src/anomaly_detector/anomaly_detector.i
+
+# target to preprocess a source file
+src/anomaly_detector/anomaly_detector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/anomaly_detector/anomaly_detector.cpp.i
+.PHONY : src/anomaly_detector/anomaly_detector.cpp.i
+
+src/anomaly_detector/anomaly_detector.s: src/anomaly_detector/anomaly_detector.cpp.s
+.PHONY : src/anomaly_detector/anomaly_detector.s
+
+# target to generate assembly for a file
+src/anomaly_detector/anomaly_detector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/anomaly_detector/anomaly_detector.cpp.s
+.PHONY : src/anomaly_detector/anomaly_detector.cpp.s
+
+src/dynamo_writer/dynamo_writer.o: src/dynamo_writer/dynamo_writer.cpp.o
+.PHONY : src/dynamo_writer/dynamo_writer.o
+
+# target to build an object file
+src/dynamo_writer/dynamo_writer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/dynamo_writer/dynamo_writer.cpp.o
+.PHONY : src/dynamo_writer/dynamo_writer.cpp.o
+
+src/dynamo_writer/dynamo_writer.i: src/dynamo_writer/dynamo_writer.cpp.i
+.PHONY : src/dynamo_writer/dynamo_writer.i
+
+# target to preprocess a source file
+src/dynamo_writer/dynamo_writer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/dynamo_writer/dynamo_writer.cpp.i
+.PHONY : src/dynamo_writer/dynamo_writer.cpp.i
+
+src/dynamo_writer/dynamo_writer.s: src/dynamo_writer/dynamo_writer.cpp.s
+.PHONY : src/dynamo_writer/dynamo_writer.s
+
+# target to generate assembly for a file
+src/dynamo_writer/dynamo_writer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/dynamo_writer/dynamo_writer.cpp.s
+.PHONY : src/dynamo_writer/dynamo_writer.cpp.s
+
 src/handler/handler.o: src/handler/handler.cpp.o
 .PHONY : src/handler/handler.o
 
@@ -210,6 +258,12 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... storage_service"
+	@echo "... src/anomaly_detector/anomaly_detector.o"
+	@echo "... src/anomaly_detector/anomaly_detector.i"
+	@echo "... src/anomaly_detector/anomaly_detector.s"
+	@echo "... src/dynamo_writer/dynamo_writer.o"
+	@echo "... src/dynamo_writer/dynamo_writer.i"
+	@echo "... src/dynamo_writer/dynamo_writer.s"
 	@echo "... src/handler/handler.o"
 	@echo "... src/handler/handler.i"
 	@echo "... src/handler/handler.s"

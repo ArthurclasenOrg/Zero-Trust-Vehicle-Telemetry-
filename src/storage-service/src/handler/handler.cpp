@@ -1,13 +1,18 @@
 #include "handler.hpp"
 #include "queue.hpp"
+#include "../dynamo_writer/dynamo_writter.hpp"
+#include "../s3_writer/s3_writer.hpp"
 
 using namespace std; 
 
-Handler::Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration clientConfig)
+Handler::Handler(const Aws::String& queueUrl, 
+    std::shared_ptr<Aws::SQS::SQSClient> sqsClient,
+    std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient,
+    std::shared_ptr<Aws::S3::S3Client> s3Client)
     : queueUrl(queueUrl),
-      clientConfig(clientConfig),
-      sqs(make_unique<Aws::SQS::SQSClient>(clientConfig)),
-      queue() {}
+      sqsClient(sqsClient),
+      dynamoClient(dynamoClient),
+      s3Client(s3Client) {}
 
 // processing queue (it returns the message object with receiptHandle and body data)
 optional<const Aws::SQS::Model::Message> Handler::processSQSQueue()
@@ -20,7 +25,7 @@ optional<const Aws::SQS::Model::Message> Handler::processSQSQueue()
     request.SetWaitTimeSeconds(5); // polling of 5 seconds
 
     // call to SQS
-    auto outcome = this->sqs->ReceiveMessage(request);
+    auto outcome = this->sqsClient->ReceiveMessage(request);
     
     if (outcome.IsSuccess()){ // if I receive messages
         const auto& messages = outcome.GetResult().GetMessages();
@@ -71,7 +76,7 @@ void Handler::deleteMessage(Aws::String receiptHandle)
     deleteRequest.SetQueueUrl(this->queueUrl);  // deleting message from this queue
     deleteRequest.SetReceiptHandle(receiptHandle);
 
-    auto deleteOutcome = sqs->DeleteMessage(deleteRequest); // deleting message
+    auto deleteOutcome = sqsClient->DeleteMessage(deleteRequest); // deleting message
     if (deleteOutcome.IsSuccess()){     // if success on deleting
         cout << "Message removed from queue with success!" << endl;
     }
@@ -102,10 +107,20 @@ void Handler::startPolling()
     }
 }
 
+Aws::String buildS3Key(const VehicleTelemetryState& telemetry) {
+    // Exemplo do formato: vehicles/vehicle-01/1721490000000.json
+    return "vehicles/" + telemetry.vehicle_id + "/" + 
+           std::to_string(telemetry.last_seen_epoch_ms) + ".json";
+}
+
 // thread 2 deals with the rest of the job (detect anomaly->write on dynamoDB and S3->delete data from sqs) 
 void Handler::handleVehicleData()
 {
     cout << "Initializing Data Consumption" << endl;
+
+    // getting bucket name
+    const char* envBuckName = std::getenv("BUCKET_NAME");
+    if (!envBuckName) {std::cerr << "BUCKET_NAME not defined" << std::endl;return;}
 
     while (true) {
         SqsMessageWrapper message;
@@ -115,10 +130,20 @@ void Handler::handleVehicleData()
         cout << message.vehicleData->toString() << endl;
         cout << message.receiptHandle << endl;
         
-        // TODO 
-        // 1. Put on the anomaly detector
-        // 2. Write on dynamoDB 
-        // 3. Write on S3 Bucket
+        // putting on the anomaly detector
+        bool isAnomaly = detectAnomaly(*message.vehicleData);
+        if (isAnomaly) cout << "anomaly!" << endl;
+        
+        // writing on dynamoDB (passing the name of table too)
+        const Aws::String tableName = "vehicle-telemetry-state";
+        auto dyanmo = std::make_unique<DynamoWritter>(tableName, *message.vehicleData, this->dynamoClient);
+        dyanmo->dynamoWrite();
+
+        // writing on the s3 bucket
+        const Aws::String bucketName = envBuckName;
+        const Aws::String fileKey = buildS3Key(*message.vehicleData);
+        auto s3bucket = std::make_unique<S3Writer>(bucketName, fileKey, *message.vehicleData, this->s3Client);
+        s3bucket->s3Write();
 
         this->deleteMessage(message.receiptHandle);
         cout << "Deleted Message with success" << endl;
