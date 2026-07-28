@@ -1,5 +1,5 @@
 #include "anomaly_detector.hpp"
 
-bool detectAnomaly(VehicleTelemetryState vehicle){
+bool detectAnomaly(const VehicleTelemetryState& vehicle){
     return (vehicle.status != "ok");
 }

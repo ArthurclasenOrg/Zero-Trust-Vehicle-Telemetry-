@@ -14,8 +14,6 @@ bool DynamoWritter::dynamoWrite(){
     // initialzing DynamoDB client
     Aws::DynamoDB::DynamoDBClient dynamoClient(this->clientConfig);
 
-    cout << "initialized client" << endl;
-
     // preparing request object
     Aws::DynamoDB::Model::PutItemRequest putItemRequest;
     putItemRequest.SetTableName(this->tableName);

@@ -124,7 +124,6 @@ void Handler::handleVehicleData()
         // 2. Write on dynamoDB (passing the name of table too)
         const Aws::String tableName = "vehicle-telemetry-state";
         auto dynamo_handler = std::make_unique<DynamoWritter>(tableName, *message.vehicleData, this->clientConfig);
-        cout << "object created" << endl;
         dynamo_handler->dynamoWrite();
 
         // 3. Write on S3 Bucket

@@ -3,6 +3,6 @@
 #ifndef ANOMALY_DETECTOR_HPP
 #define ANOMALY_DETECTOR_HPP
 
-bool detectAnomaly(VehicleTelemetryState vehicle);
+bool detectAnomaly(const VehicleTelemetryState& vehicle);
 
 #endif
