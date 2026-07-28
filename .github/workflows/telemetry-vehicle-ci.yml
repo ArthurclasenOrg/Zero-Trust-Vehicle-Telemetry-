@@ -91,6 +91,20 @@ jobs:
         # the same services from job 1 (must add watch-telemetry and public-panel later)
         service: [storage-service]
     steps:
+        # bringing repo from outside (job 1)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+        # verifying changes
+      - name: Check for path changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            changed:
+              - 'src/${{ matrix.service }}/**'
+              - 'src/common/include/**'
+
         # downloading .tar from job 1
       - name: Download Image Artifact
         if: steps.filter.outputs.changed == 'true'
