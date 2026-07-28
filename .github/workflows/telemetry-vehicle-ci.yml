@@ -1,0 +1,90 @@
+name: Telemetry Vehicle Security Pipeline
+
+# pipeline activated at each commit
+on:
+  push:
+    branches: ["main", "pipeline"]
+  pull_request:
+    branches: ["main", "pipeline"]
+
+# disclaimer : job 2 and 3 run in parallel
+jobs:
+  # job 1: building images 
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest # VM Linux
+    if: false # TURNING OFF JOB 1 TEMPORARILY
+    strategy:
+      fail-fast: false # if a service fails, it doesn't cancell other building
+      matrix:
+        # services used to be identified by matrix
+        service:
+          - public-panel-svc
+          - watch-telemetry-svc
+          - storage-service
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # using an action to detect files changes
+      - name: Check for path changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            changed:
+              - 'src/${{ matrix.service }}/**'
+              - 'src/common/include/**' 
+
+      # building the docker image
+      - name: Build Docker Image
+        if: steps.filter.outputs.changed == 'true'
+        run: |
+          echo "Changes detected on ${{ matrix.service }}. Starting build..."
+          
+          # building dockerfile itself
+          docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }} .
+          
+          # TODO : SAVE IMAGE
+
+  # job 2: scanning code with semgrep and c++check
+  code_scan:
+    name: SAST Scanning
+    # needs: build # depends on building stage (job 1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        # SEMGREP scan (first step)
+      - name: Semgrep Scan
+        run: |
+          python3 -m pip install semgrep
+          semgrep scan --config "p/default" src/
+
+        # CPPCheck (second stage)
+      - name: Install Cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: CPPCheck Scan
+        # Check everything possible (performance, warns, errors etc...)
+        # To not scan the whole lib (aws-sdk) code
+        # Dir to check src/
+        run: |
+          echo "Starting scan with Cppcheck..."
+          cppcheck --enable=all --suppress=missingIncludeSystem -i src/lib/ --error-exitcode=1 src/                              
+
+  # job 3: scanning image with aquatrivysec and checking sbom
+  image_scan:
+    name: Image Scan and SBOM
+    # needs: build # also depends on job 1 (run in parallel with job 2)
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Here is Trivy"
+
+  # job 4: final tests and realeasing code to the infrastructure 
+  release:
+    name: Release to AWS
+    needs: [code_scan, image_scan] # it depends on job 2 and 3, to scan code and image
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Here is ECR and terraform"
