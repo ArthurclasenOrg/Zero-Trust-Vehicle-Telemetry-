@@ -18,6 +18,7 @@ src/storage-service/storage_service
 
 # environment
 *.env
+*.env.aws
 
 # IDE
 .vscode/

@@ -24,6 +24,8 @@ add_executable(storage_service
     src/main.cpp 
     src/handler/handler.cpp 
     src/handler/queue.cpp
+    src/dynamo_writer/dynamo_writer.cpp 
+    src/anomaly_detector/anomaly_detector.cpp
 )
 
 # telling compiler where to search for headers (.hpp)

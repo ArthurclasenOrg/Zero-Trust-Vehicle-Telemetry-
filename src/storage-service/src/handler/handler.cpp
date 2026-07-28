@@ -1,9 +1,10 @@
 #include "handler.hpp"
 #include "queue.hpp"
+#include "../dynamo_writer/dynamo_writter.hpp"
 
 using namespace std; 
 
-Handler::Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration clientConfig)
+Handler::Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration& clientConfig)
     : queueUrl(queueUrl),
       clientConfig(clientConfig),
       sqs(make_unique<Aws::SQS::SQSClient>(clientConfig)),
@@ -117,7 +118,15 @@ void Handler::handleVehicleData()
         
         // TODO 
         // 1. Put on the anomaly detector
-        // 2. Write on dynamoDB 
+        bool isAnomaly = detectAnomaly(*message.vehicleData);
+        if (isAnomaly) cout << "anomaly!" << endl;
+        
+        // 2. Write on dynamoDB (passing the name of table too)
+        const Aws::String tableName = "vehicle-telemetry-state";
+        auto dynamo_handler = std::make_unique<DynamoWritter>(tableName, *message.vehicleData, this->clientConfig);
+        cout << "object created" << endl;
+        dynamo_handler->dynamoWrite();
+
         // 3. Write on S3 Bucket
 
         this->deleteMessage(message.receiptHandle);

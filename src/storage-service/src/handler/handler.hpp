@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include "queue.hpp"
+#include "../anomaly_detector/anomaly_detector.hpp"
 
 #ifndef HANDLER_HPP
 #define HANDLER_HPP
@@ -19,7 +20,7 @@ private:
     std::unique_ptr<Aws::SQS::SQSClient> sqs;
     Queue queue;
 public:
-    Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration clientConfig);
+    Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration& clientConfig);
 
     // method to get data from queue
     std::optional<const Aws::SQS::Model::Message> processSQSQueue();

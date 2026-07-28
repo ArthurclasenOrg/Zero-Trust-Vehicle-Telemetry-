@@ -52,13 +52,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 # installing only runnable libs 
 # updating packages to correct known vulnerabilities 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    uuid-dev \
-    zlib1g-dev \
+    ca-certificates \
+    libcurl4 \
+    libssl3 \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/*
+
+RUN update-ca-certificates
 
 # creating a group and a user without root privileges and no login permission
 RUN groupadd -r appgroup && useradd -r -g appgroup -s /usr/sbin/nologin appuser
@@ -69,7 +69,7 @@ WORKDIR /app
 COPY --from=builder /build_env/src/storage-service/build/storage_service /app/storage_service
 
 # removing debug symbols to reduce size
-RUN strip /app/storage_service
+# RUN strip /app/storage_service
 
 # alters binary owner to non-root user
 RUN chown appuser:appgroup /app/storage_service && chmod +x /app/storage_service

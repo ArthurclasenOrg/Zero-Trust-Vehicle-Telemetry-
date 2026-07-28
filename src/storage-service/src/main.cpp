@@ -35,7 +35,7 @@ int main()
 
     // starting threads
     t1_data_producer.join();
-    t2_data_consumer.join();
+    t2_data_consumer.join();  
 
     Aws::ShutdownAPI(options); // shutting down when ended
     return 0;
