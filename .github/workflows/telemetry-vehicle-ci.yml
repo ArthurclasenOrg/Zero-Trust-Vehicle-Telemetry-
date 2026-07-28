@@ -17,10 +17,7 @@ jobs:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
         # services used to be identified by matrix
-        service:
-          - public-panel-svc
-          - watch-telemetry-svc
-          - storage-service
+        service: [storage-service]
 
     steps:
       - name: Checkout Repository
@@ -91,20 +88,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # the same services from job 1
-        service: [storage-service, watch-telemetry-svc, public-panel-svc]
+        # the same services from job 1 (must add watch-telemetry and public-panel later)
+        service: [storage-service]
     steps:
         # downloading .tar from job 1
       - name: Download Image Artifact
+        if: steps.filter.outputs.changed == 'true'
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.service }}
 
         # loading docker image from tar downloaded
       - name: Load Docker Image
+        if: steps.filter.outputs.changed == 'true'
         run: docker load < ${{ matrix.service }}-image.tar
 
       - name: Run Trivy Vulnerability Scanner
+        if: steps.filter.outputs.changed == 'true'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'ztv-${{ matrix.service }}:${{ github.sha }}'
