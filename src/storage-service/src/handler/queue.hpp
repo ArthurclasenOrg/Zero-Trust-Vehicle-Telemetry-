@@ -37,7 +37,7 @@ private:
 public:
     void produce(SqsMessageWrapper vehicleData);
     bool consume(SqsMessageWrapper& vehicleDataOut);
-    void finish();
+    // void finish();
 };
 
 #endif

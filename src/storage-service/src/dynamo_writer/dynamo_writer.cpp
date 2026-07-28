@@ -4,16 +4,15 @@
 
 using namespace std;
 
-DynamoWritter::DynamoWritter(const Aws::String& tableName, VehicleTelemetryState& vehicle, Aws::Client::ClientConfiguration& clientConfig)
+DynamoWritter::DynamoWritter(const Aws::String& tableName, 
+                            VehicleTelemetryState& vehicle, 
+                            std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient)
     :  tableName(tableName),
        vehicle(vehicle),
-       clientConfig(clientConfig) {}
+       dynamoClient(dynamoClient) {}
 
-bool DynamoWritter::dynamoWrite(){
-
-    // initialzing DynamoDB client
-    Aws::DynamoDB::DynamoDBClient dynamoClient(this->clientConfig);
-
+bool DynamoWritter::dynamoWrite()
+{
     // preparing request object
     Aws::DynamoDB::Model::PutItemRequest putItemRequest;
     putItemRequest.SetTableName(this->tableName);
@@ -62,7 +61,7 @@ bool DynamoWritter::dynamoWrite(){
     //--------------------------------------------
 
     // making the request (write) to AWS
-    const auto outcome = dynamoClient.PutItem(putItemRequest);
+    const auto outcome = this->dynamoClient->PutItem(putItemRequest);
 
     // validates if it had success
     if (outcome.IsSuccess()) {

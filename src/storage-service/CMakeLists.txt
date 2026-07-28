@@ -26,6 +26,7 @@ add_executable(storage_service
     src/handler/queue.cpp
     src/dynamo_writer/dynamo_writer.cpp 
     src/anomaly_detector/anomaly_detector.cpp
+    src/s3_writer/s3_writer.cpp
 )
 
 # telling compiler where to search for headers (.hpp)

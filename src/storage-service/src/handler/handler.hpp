@@ -3,6 +3,7 @@
 #include <aws/sqs/model/ReceiveMessageRequest.h>
 #include <aws/sqs/model/ReceiveMessageResult.h>
 #include <aws/sqs/model/DeleteMessageRequest.h>
+#include <aws/s3/S3Client.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -16,11 +17,15 @@ class Handler
 {
 private:
     const Aws::String queueUrl;
-    Aws::Client::ClientConfiguration clientConfig;
-    std::unique_ptr<Aws::SQS::SQSClient> sqs;
+    std::shared_ptr<Aws::SQS::SQSClient> sqsClient;
+    std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient;
+    std::shared_ptr<Aws::S3::S3Client> s3Client;
     Queue queue;
 public:
-    Handler(const Aws::String& queueUrl, Aws::Client::ClientConfiguration& clientConfig);
+    Handler(const Aws::String& queueUrl, 
+        std::shared_ptr<Aws::SQS::SQSClient> sqsClient,
+        std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient,
+        std::shared_ptr<Aws::S3::S3Client> s3Client);
 
     // method to get data from queue
     std::optional<const Aws::SQS::Model::Message> processSQSQueue();
