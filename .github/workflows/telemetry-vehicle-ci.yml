@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: ["main", "job4-pipeline"]
 
+permissions: 
+  id-token: write # for AWS OIDC work
+  contents: read 
+
 # disclaimer : job 2 and 3 run in parallel
 jobs:
   # job 1: building images 
