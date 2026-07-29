@@ -3,9 +3,9 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "watch-telemetry-service"]
+    branches: ["main", "job4-pipeline"]
   pull_request:
-    branches: ["main", "watch-telemetry-service"]
+    branches: ["main", "job4-pipeline"]
 
 # disclaimer : job 2 and 3 run in parallel
 jobs:
@@ -131,10 +131,83 @@ jobs:
           # it doesn't allow code to have high and critical problems
           severity: 'HIGH,CRITICAL'
 
-  # job 4: final tests and realeasing code to the infrastructure 
+  # job 4: final tests and IaC scan
+  test_and_scan:
+    name: Test, Push & Scan IaC
+    needs: [code_scan, image_scan]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [storage-service, watch-telemetry]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Download built images
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-${{ matrix.service }}
+        
+      - name: Load images
+        run: |
+          for f in /tmp/images/*/*.tar; do docker load -i "$f"; done
+  
+      - name: Test storage-service 
+        if: matrix.service == 'storage-service'
+        run: ./scripts/test_storage_service.sh
+
+      - name: Test watch-telemetry-svc
+        if: matrix.service == 'watch-telemetry-svc'
+        run: ./scripts/test_watch_telemetry.sh
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghrc.io
+          username: ${{ github.actor }}
+          passowrd: ${{ secrets.GITH_TOKEN }}
+
+      - name: Push images to container registry
+        run: |
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker tag ztv-${{ matrix.service }}:${{ github.sha }} ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
+          docker push ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Terrascan (IaC static scan)
+        run: terrascan scan -d terraform/
+
+      - name: Terratest (IaC dynamic test)
+        run: |
+          cd tests/terratest
+          go test ./... -timeout 30m
+
+  # job 5: release to AWS
   release:
     name: Release to AWS
-    needs: [code_scan, image_scan] # it depends on job 2 and 3, to scan code and image
+    needs: [test_and_scan] # it depends on job 2 and 3, to scan code and image
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - run: echo "Here is ECR and terraform"
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform plan/apply
+        run: |
+          cd terraform
+          terraform init
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+
+      - name: Deploy image (binary) to Lambda
+        run: |
+          echo "TODO: not tested yet"
