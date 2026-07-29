@@ -3,9 +3,9 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "storage-service"]
+    branches: ["main", "watch-telemetry-service"]
   pull_request:
-    branches: ["main", "storage-service"]
+    branches: ["main", "watch-telemetry-service"]
 
 # disclaimer : job 2 and 3 run in parallel
 jobs:

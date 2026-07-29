@@ -1,1 +1,89 @@
-FROM baseImage
+# 1. Build
+# using ubuntu official image
+FROM ubuntu:22.04 AS builder
+
+# avoiding apt-get interactions during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# installing the build tools and AWS dependencies (AWS SDK C++) (headers)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    uuid-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# defining the builder dir
+WORKDIR /build_env
+
+# steps to install aws-sdk-lib
+RUN git clone --recurse-submodules --depth 1 https://github.com/aws/aws-sdk-cpp.git
+WORKDIR /build_env/aws-sdk-cpp/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_ONLY="dynamodb" \
+          -DENABLE_TESTING=OFF \
+          -DBUILD_SHARED_LIBS=OFF \
+          .. && \
+    make -j$(nproc) && \
+    make install
+
+# installing lambda runtime
+WORKDIR /build_env
+RUN git clone https://github.com/awslabs/aws-lambda-cpp.git
+WORKDIR /build_env/aws-lambda-cpp/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF .. && \
+    make -j$(nproc) && \
+    make install
+
+# compiling the project 
+WORKDIR /build_env
+
+# copying the common dir (dependency) and service code
+COPY src/common/ src/common/
+COPY src/watch-telemetry-svc/ src/watch-telemetry-svc/
+
+# entering build dir
+WORKDIR /build_env/src/watch-telemetry-svc/build
+
+# running CMake and compiling
+# using -j$(nproc) to use all cpu cores and compile faster
+RUN cmake .. && make -j$(nproc)
+
+# 2. Runtime
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# installing only runnable libs 
+# updating packages to correct known vulnerabilities 
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libcurl4 \
+    libssl3 \
+    zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-ca-certificates
+
+# creating a group and a user without root privileges and no login permission
+RUN groupadd -r appgroup && useradd -r -g appgroup -s /usr/sbin/nologin appuser
+
+WORKDIR /app
+
+# copy only binary on build stage
+COPY --from=builder /build_env/src/watch-telemtry-svc/build/watch_telemtry_service /app/watch_telemtry_service
+
+# removing debug symbols to reduce size
+# RUN strip /app/watch_telemtry_service
+
+# alters binary owner to non-root user
+RUN chown appuser:appgroup /app/watch_telemetry_service && chmod +x /app/watch_telemtry_service
+
+# defines the container will run as this user
+USER appuser
+
+# running
+ENTRYPOINT [ "./watch_telemtry_service" ]
