@@ -142,49 +142,70 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [storage-service, watch-telemetry]
+        service: [storage-service, watch-telemetry-svc]
     steps:
       - uses: actions/checkout@v4
 
+      # checking for path changes
+      - name: Check for path changes  
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            changed:
+              - 'src/${{ matrix.service }}/**'
+              - 'src/common/include/**'
+
+      # configuring AWS credential to tests
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       
+      # building images on artifacts
       - name: Download built images
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.service }}
         
+      # loading those images
       - name: Load images
+        if: steps.filter.outputs.changed == 'true'
         run: |
           for f in /tmp/images/*/*.tar; do docker load -i "$f"; done
   
+      # testing storage service (this script runs the test from the storage-service dir)
       - name: Test storage-service 
-        if: matrix.service == 'storage-service'
+        if: steps.filter.outputs.changed == 'true' && matrix.service == 'storage-service'
         run: ./scripts/test_storage_service.sh
 
+      # testing watch telemetry service (the script has the same idea as storage)
       - name: Test watch-telemetry-svc
-        if: matrix.service == 'watch-telemetry-svc'
+        if: steps.filter.outputs.changed == 'true' && matrix.service == 'watch-telemetry-svc'
         run: ./scripts/test_watch_telemetry.sh
 
+      # logging on github container registry (to post the image)
       - name: Log in to GitHub Container Registry
+        if: steps.filter.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghrc.io
           username: ${{ github.actor }}
-          passowrd: ${{ secrets.GITH_TOKEN }}
+          passowrd: ${{ secrets.GITHUB_TOKEN }}
 
+      # pushing image to the repo (posting it)
       - name: Push images to container registry
         run: |
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker tag ztv-${{ matrix.service }}:${{ github.sha }} ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
           docker push ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
 
+      # static scan of terraform files
       - name: Terrascan (IaC static scan)
         run: terrascan scan -d terraform/
 
+      # dynamic scan of terraform infrastructure
       - name: Terratest (IaC dynamic test)
         run: |
           cd tests/terratest
