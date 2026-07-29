@@ -13,7 +13,8 @@
 .vscode/
 
 # ignore scripts
-**/tests/
+# **/tests/
+src/storage-service/tests
 
 # ignoring exec
 **/storage_service

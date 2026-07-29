@@ -16,6 +16,13 @@ src/storage-service/CMakeCache.txt
 src/storage-service/cmake_install.cmake
 src/storage-service/storage_service
 
+# watch-telemetry build artifacts
+src/watch-telemetry-svc/CMakeFiles/
+src/watch-telemetry-svc/cmake_install.cmake
+src/watch-telemetry-svc/CMakeCache.txt
+src/watch-telemetry-svc/watch_telemetry_local_test
+src/watch-telemetry-svc/watch_telemetry_service
+
 # environment
 *.env
 *.env.aws

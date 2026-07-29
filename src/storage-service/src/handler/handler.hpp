@@ -13,7 +13,7 @@
 #ifndef HANDLER_HPP
 #define HANDLER_HPP
 
-class Handler
+class StorageHandler
 {
 private:
     const Aws::String queueUrl;
@@ -22,7 +22,7 @@ private:
     std::shared_ptr<Aws::S3::S3Client> s3Client;
     Queue queue;
 public:
-    Handler(const Aws::String& queueUrl, 
+    StorageHandler(const Aws::String& queueUrl, 
         std::shared_ptr<Aws::SQS::SQSClient> sqsClient,
         std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient,
         std::shared_ptr<Aws::S3::S3Client> s3Client);

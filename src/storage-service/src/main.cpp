@@ -34,9 +34,9 @@ int main()
     auto s3Client = std::make_shared<Aws::S3::S3Client>(clientConfig);
 
     // processing from sqs queue and deleting message later
-    auto handler = std::make_unique<Handler>(queueUrl, sqsClient, dynamoClient, s3Client);
-    thread t1_data_producer(&Handler::startPolling, handler.get());
-    thread t2_data_consumer(&Handler::handleVehicleData, handler.get());
+    auto handler = std::make_unique<StorageHandler>(queueUrl, sqsClient, dynamoClient, s3Client);
+    thread t1_data_producer(&StorageHandler::startPolling, handler.get());
+    thread t2_data_consumer(&StorageHandler::handleVehicleData, handler.get());
 
     // starting threads
     t1_data_producer.join();

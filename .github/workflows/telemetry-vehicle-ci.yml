@@ -3,9 +3,9 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "storage-service"]
+    branches: ["main", "watch-telemetry-service"]
   pull_request:
-    branches: ["main", "storage-service"]
+    branches: ["main", "watch-telemetry-service"]
 
 # disclaimer : job 2 and 3 run in parallel
 jobs:
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
         # services used to be identified by matrix
-        service: [storage-service]
+        service: [storage-service, watch-telemetry-svc]
 
     steps:
       - name: Checkout Repository
@@ -79,7 +79,7 @@ jobs:
         # Dir to check src/
         run: |
           echo "Starting scan with Cppcheck..."
-          cppcheck --enable=all --suppress=missingIncludeSystem -i src/lib/ --error-exitcode=1 src/                              
+          cppcheck --enable=all --suppress=missingIncludeSystem -i src/lib/ --error-exitcode=1 src/ -I src/common/include                             
 
   # job 3: scanning image with aquatrivysec and checking sbom
   image_scan:
@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         # the same services from job 1 (must add watch-telemetry and public-panel later)
-        service: [storage-service]
+        service: [storage-service, watch-telemetry-svc]
     steps:
         # bringing repo from outside (job 1)
       - name: Checkout Repository
