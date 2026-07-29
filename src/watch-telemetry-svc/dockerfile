@@ -74,16 +74,16 @@ RUN groupadd -r appgroup && useradd -r -g appgroup -s /usr/sbin/nologin appuser
 WORKDIR /app
 
 # copy only binary on build stage
-COPY --from=builder /build_env/src/watch-telemtry-svc/build/watch_telemtry_service /app/watch_telemtry_service
+COPY --from=builder /build_env/src/watch-telemetry-svc/build/watch_telemetry_service /app/watch_telemetry_service
 
 # removing debug symbols to reduce size
 # RUN strip /app/watch_telemtry_service
 
 # alters binary owner to non-root user
-RUN chown appuser:appgroup /app/watch_telemetry_service && chmod +x /app/watch_telemtry_service
+RUN chown appuser:appgroup /app/watch_telemetry_service && chmod +x /app/watch_telemetry_service
 
 # defines the container will run as this user
 USER appuser
 
 # running
-ENTRYPOINT [ "./watch_telemtry_service" ]
+ENTRYPOINT [ "./watch_telemetry_service" ]

@@ -17,7 +17,7 @@ jobs:
       fail-fast: false # if a service fails, it doesn't cancell other building
       matrix:
         # services used to be identified by matrix
-        service: [storage-service]
+        service: [storage-service, watch-telemetry-svc]
 
     steps:
       - name: Checkout Repository
@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         # the same services from job 1 (must add watch-telemetry and public-panel later)
-        service: [storage-service]
+        service: [storage-service, watch-telemetry-svc]
     steps:
         # bringing repo from outside (job 1)
       - name: Checkout Repository

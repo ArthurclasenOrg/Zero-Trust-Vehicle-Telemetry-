@@ -18,20 +18,20 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # defining running object and files (.cpp)
-add_executable(watch_telemetry_local_test
+add_executable(watch_telemetry_service
     tests/local_test_main.cpp
     src/handler/handler.cpp 
     src/dynamo_reader/dynamo_reader.cpp 
 )
 
 # telling compiler where to search for headers (.hpp)
-target_include_directories(watch_telemetry_local_test PRIVATE 
+target_include_directories(watch_telemetry_service PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src 
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/include
 )
 
 # linking AWS SDK and the thread lib to running
-target_link_libraries(watch_telemetry_local_test PRIVATE 
+target_link_libraries(watch_telemetry_service PRIVATE 
     ${AWSSDK_LINK_LIBRARIES} 
     AWS::aws-lambda-runtime
 )

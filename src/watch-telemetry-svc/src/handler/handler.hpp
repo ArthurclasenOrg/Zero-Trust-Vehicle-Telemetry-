@@ -1,7 +1,6 @@
 #pragma once
 #include <aws/dynamodb/DynamoDBClient.h>
 #include <aws/lambda-runtime/runtime.h>
-#include <format>
 #include <iostream>
 #include <string>
 #include "vehicle_telemetry_state.hpp"

@@ -58,13 +58,13 @@ bool DynamoReader::dynamoReadDoubleKey(std::vector<VehicleTelemetryState>& vehic
     request.SetTableName(this->tableName);
 
     // setting index name
-    request.SetIndexName("anomaly-status-index");
+    request.SetIndexName("Vehicles-with-anomalies");
 
     // condition to partition key
-    request.SetKeyConditionExpression("#s = :statusVal");
-    request.AddExpressionAttributeNames("#s", "status");
+    request.SetKeyConditionExpression("#s = :statusVal");   // column must be equal to the statusVal defined 
+    request.AddExpressionAttributeNames("#s", "status");    // creating alias to status because this is a reserved word for Dynamo
 
-    // changing expression variables
+    // which value we are searching (status = anomaly)
     Aws::DynamoDB::Model::AttributeValue statusVal;
     statusVal.SetS("anomaly");
     request.AddExpressionAttributeValues(":statusVal", statusVal);
