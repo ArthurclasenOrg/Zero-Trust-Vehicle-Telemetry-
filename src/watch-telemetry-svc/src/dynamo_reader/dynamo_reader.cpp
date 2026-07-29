@@ -76,7 +76,7 @@ bool DynamoReader::dynamoReadDoubleKey(std::vector<VehicleTelemetryState>& vehic
         const auto& items = outcome.GetResult().GetItems();
 
         for (const auto& item : items) {
-            VehicleTelemetryState vehicle;
+            VehicleTelemetryState vehicle{}; // all primitives start as 0
             try {
                 // converting numbers (strings) to primitives c++
                 if (item.find("vehicle_id") != item.end()) vehicle.vehicle_id = item.at("vehicle_id").GetS();

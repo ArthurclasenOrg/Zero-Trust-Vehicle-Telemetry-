@@ -19,7 +19,7 @@ private:
     aws::lambda_runtime::invocation_response getAnomalies();
 
 public:
-    Handler(std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
+    explicit Handler(std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
 
     aws::lambda_runtime::invocation_response handleRequest(
         aws::lambda_runtime::invocation_request const& request);

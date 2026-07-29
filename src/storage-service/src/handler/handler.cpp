@@ -5,7 +5,7 @@
 
 using namespace std; 
 
-Handler::Handler(const Aws::String& queueUrl, 
+StorageHandler::StorageHandler(const Aws::String& queueUrl, 
     std::shared_ptr<Aws::SQS::SQSClient> sqsClient,
     std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient,
     std::shared_ptr<Aws::S3::S3Client> s3Client)
@@ -15,7 +15,7 @@ Handler::Handler(const Aws::String& queueUrl,
       s3Client(s3Client) {}
 
 // processing queue (it returns the message object with receiptHandle and body data)
-optional<const Aws::SQS::Model::Message> Handler::processSQSQueue()
+optional<const Aws::SQS::Model::Message> StorageHandler::processSQSQueue()
 {
     // configuring the request to push to 1 message
     Aws::SQS::Model::ReceiveMessageRequest request;
@@ -43,7 +43,7 @@ optional<const Aws::SQS::Model::Message> Handler::processSQSQueue()
     return nullopt; // empty object 
 }
 
-unique_ptr<VehicleTelemetryState> Handler::parseJsonToPointer(const Aws::String& jsonBody)
+unique_ptr<VehicleTelemetryState> StorageHandler::parseJsonToPointer(const Aws::String& jsonBody)
 {
     Aws::Utils::Json::JsonValue jsonValue(jsonBody);
 
@@ -70,7 +70,7 @@ unique_ptr<VehicleTelemetryState> Handler::parseJsonToPointer(const Aws::String&
     return data; // returning the smart pointer with the data correctly allocated
 }
 
-void Handler::deleteMessage(Aws::String receiptHandle)
+void StorageHandler::deleteMessage(Aws::String receiptHandle)
 {
     Aws::SQS::Model::DeleteMessageRequest deleteRequest;
     deleteRequest.SetQueueUrl(this->queueUrl);  // deleting message from this queue
@@ -83,7 +83,7 @@ void Handler::deleteMessage(Aws::String receiptHandle)
 }
 
 // polling for thread 1 (consumer from sqs and producer of vehicle data for thread 2)
-void Handler::startPolling()
+void StorageHandler::startPolling()
 {
     cout << "Initializing SQS Polling (Ctrl+C) to stop" << endl;
 
@@ -114,7 +114,7 @@ Aws::String buildS3Key(const VehicleTelemetryState& telemetry) {
 }
 
 // thread 2 deals with the rest of the job (detect anomaly->write on dynamoDB and S3->delete data from sqs) 
-void Handler::handleVehicleData()
+void StorageHandler::handleVehicleData()
 {
     cout << "Initializing Data Consumption" << endl;
 
