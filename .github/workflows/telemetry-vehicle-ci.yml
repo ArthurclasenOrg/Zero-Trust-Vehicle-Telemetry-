@@ -8,9 +8,9 @@ on:
     branches: ["main", "job4-pipeline"]
 
 permissions: 
-  id-token: write   # for AWS OIDC work 
+  id-token: write   # for AWS OIDC work
   contents: read    # to read the repository code
-  packages: write   # necessary to push to ghcr
+  packages: write   # necessary to push to ghcr.io
 
 # disclaimer : job 2 and 3 run in parallel
 jobs:
@@ -48,7 +48,7 @@ jobs:
           path: ${{ matrix.service }}-image.tar
           retention-days: 1 # it doesn't keep image for more than 1 day
 
-  # job 2: scanning code with semgrep and c++check
+  # job 2: scanning code with semgrep and c++check 
   code_scan:
     name: SAST Scanning
     needs: build # depends on building stage (job 1)
