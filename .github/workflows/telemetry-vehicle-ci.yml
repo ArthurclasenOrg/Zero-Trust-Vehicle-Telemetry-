@@ -142,12 +142,14 @@ jobs:
       # testing storage service
       - name: Test storage-service 
         if: matrix.service == 'storage-service'
-        run: ./scripts/test_storage_service.sh
+        env:
+          QUEUE_URL: ${{ secrets.QUEUE_URL }}
+        run: chmod +x scripts/test_storage_service && ./scripts/test_storage_service.sh
 
       # testing watch telemetry service
       - name: Test watch-telemetry-svc
         if: matrix.service == 'watch-telemetry-svc'
-        run: ./scripts/test_watch_telemetry.sh
+        run: chmod +x scripts/test_watch_telemetry && ./scripts/test_watch_telemetry.sh
 
       # logging on github container registry (to post the image)
       - name: Log in to GitHub Container Registry

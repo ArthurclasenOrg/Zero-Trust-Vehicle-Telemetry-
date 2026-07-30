@@ -1,3 +1,28 @@
-cd ../src/storage-service/tests
+#!/bin/bash
+set -e
 
-./test_sqs_queue.sh && ./run_container.sh 
+echo "Sending message to QUEUE_URL: $QUEUE_URL"
+
+# sending 3 messages to sqs
+aws sqs send-message \
+  --queue-url "$QUEUE_URL" \
+  --message-body '{"vehicle_id":"vehicle-01","status":"ok","speed_kph":80.5,"rpm":2500,"engine_temp_c":90.2,"diagnostic_code":"","schema_version":1,"last_seen_epoch_ms":1721490000000}' \
+
+aws sqs send-message \
+  --queue-url "$QUEUE_URL" \
+  --message-body '{"vehicle_id":"vehicle-02","status":"anomaly","speed_kph":67.5,"rpm":6700,"engine_temp_c":100.2,"diagnostic_code":"","schema_version":1,"last_seen_epoch_ms":1742910000000}' \
+
+aws sqs send-message \
+  --queue-url "$QUEUE_URL" \
+  --message-body '{"vehicle_id":"vehicle-03","status":"anomaly","speed_kph":66.5,"rpm":6500,"engine_temp_c":150.2,"diagnostic_code":"","schema_version":1,"last_seen_epoch_ms":1755910000000}' \
+
+echo "Running container in a safe way..."
+
+# running the container to test if it can catch those messages sent
+docker run --rm \
+  -e QUEUE_URL="$QUEUE_URL" \
+  -e AWS_REGION="${AWS_REGION:-us-east-1}" \
+  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+  ztv-storage-service
