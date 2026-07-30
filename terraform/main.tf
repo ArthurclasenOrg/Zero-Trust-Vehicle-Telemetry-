@@ -80,3 +80,11 @@ module "cloudfront" {
   public_pannel_svc_function_url = module.lambda.public_panel_svc_function_url
   project_name = var.project_name
 }
+
+terraform {
+  backend "s3" {
+    bucket         = "zero-trust-vehicle-telemetry-state-652026215591" # Um bucket separado só para guardar o estado
+    key            = "telemetry-system/terraform.tfstate"
+    region         = "us-east-1"
+  }
+}
