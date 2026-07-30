@@ -201,8 +201,14 @@ jobs:
           terraform_wrapper: false # to not show all the terraform logs
 
       - name: Terraform plan/apply
+        # first I must get the aws account (from the OIDC)
         run: |
           cd terraform
+
+          export TF_VAR_aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+          
+          echo "Starting Terraform on AWS account: $TF_VAR_aws_account_id"
+
           terraform init
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
