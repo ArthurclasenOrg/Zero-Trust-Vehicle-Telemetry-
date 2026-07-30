@@ -18,14 +18,21 @@ aws sqs send-message \
   --queue-url "$QUEUE_URL" \
   --message-body '{"vehicle_id":"vehicle-03","status":"anomaly","speed_kph":66.5,"rpm":6500,"engine_temp_c":150.2,"diagnostic_code":"","schema_version":1,"last_seen_epoch_ms":1755910000000}' \
 
-echo "Running container in a safe way..."
+echo "Running container for processing messages in background..."
 
-# running the container to test if it can catch those messages sent
-timeout 30s docker run --rm \
+CONTAINER_ID=$(docker run -d \
   -e QUEUE_URL="$QUEUE_URL" \
   -e BUCKET_NAME="$BUCKET_NAME" \
   -e AWS_REGION="${AWS_REGION:-us-east-1}" \
   -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
   -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
   -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
-  ztv-storage-service:${TAG} || true
+  ztv-storage-service:${TAG})
+
+timeout 30s docker logs -f $CONTAINER_ID || true
+
+echo "Time is up! Forcing container to stop..."
+
+docker rm -f $CONTAINER_ID
+
+echo "Test finished successfully."
