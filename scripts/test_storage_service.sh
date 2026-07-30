@@ -21,8 +21,9 @@ aws sqs send-message \
 echo "Running container in a safe way..."
 
 # running the container to test if it can catch those messages sent
-timeout 10s docker run --rm \
+timeout 30s docker run --rm \
   -e QUEUE_URL="$QUEUE_URL" \
+  -e BUCKET_NAME="$BUCKET_NAME" \
   -e AWS_REGION="${AWS_REGION:-us-east-1}" \
   -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
   -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
