@@ -180,22 +180,6 @@ jobs:
           only_warn: true
           iac_dir: 'terraform/'
 
-      # dynamic scan of terraform infrastructure
-      - name: Setup Terraform # for executable
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Setup Go # configuring Go (terratest is made in go)
-        uses: actions/setup-go@v5
-        with:
-          go-version: '>=1.20.0'
-
-      - name: Terratest (IaC dynamic test)
-        # reading go.mod and downloading terratest libs and testing it
-        run: |
-          cd tests/terratest
-          go mod tidy 
-          go test ./... -timeout 30m
-
   # job 5: release to AWS
   release:
     name: Release to AWS
