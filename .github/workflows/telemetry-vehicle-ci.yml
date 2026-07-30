@@ -3,13 +3,18 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "watch-telemetry-service"]
+    branches: ["main", "job4-pipeline"]
   pull_request:
-    branches: ["main", "watch-telemetry-service"]
+    branches: ["main", "job4-pipeline"]
+
+permissions: 
+  id-token: write   # for AWS OIDC work
+  contents: read    # to read the repository code
+  packages: write   # necessary to push to ghcr.io
 
 # disclaimer : job 2 and 3 run in parallel
 jobs:
-  # job 1: building images 
+  # job 1: building images ALWAYS
   build:
     name: Build Applications
     runs-on: ubuntu-latest # VM Linux
@@ -23,40 +28,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # using an action to detect files changes
-      - name: Check for path changes
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            changed:
-              - 'src/${{ matrix.service }}/**'
-              - 'src/common/include/**' 
-
       # building the docker image
       - name: Build Docker Image
-        if: steps.filter.outputs.changed == 'true'
         run: |
-          echo "Changes detected on ${{ matrix.service }}. Starting build..."
+          echo "Starting build for ${{ matrix.service }}..."
           
           # building dockerfile itself
           docker build -f src/${{ matrix.service }}/dockerfile -t ztv-${{ matrix.service }}:${{ github.sha }} .
           
       # saving image
       - name: Save Docker Image to Tar
-        if: steps.filter.outputs.changed == 'true'
         run: docker save ztv-${{ matrix.service }}:${{ github.sha }} > ${{ matrix.service }}-image.tar
 
       # upldoading image to actions
       - name: Upload Image Artifact
-        if: steps.filter.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ matrix.service }}
           path: ${{ matrix.service }}-image.tar
           retention-days: 1 # it doesn't keep image for more than 1 day
 
-  # job 2: scanning code with semgrep and c++check
+  # job 2: scanning code with semgrep and c++check 
   code_scan:
     name: SAST Scanning
     needs: build # depends on building stage (job 1)
@@ -64,19 +56,19 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        # SEMGREP scan (first step)
+        
+      # SEMGREP scan (first step)
       - name: Semgrep Scan
         run: |
           python3 -m pip install semgrep
           semgrep scan --config "p/default" src/
 
-        # CPPCheck (second stage)
+      # CPPCheck (second stage)
       - name: Install Cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
       - name: CPPCheck Scan
         # Check everything possible (performance, warns, errors etc...)
         # To not scan the whole lib (aws-sdk) code
-        # Dir to check src/
         run: |
           echo "Starting scan with Cppcheck..."
           cppcheck --enable=all --suppress=missingIncludeSystem -i src/lib/ --error-exitcode=1 src/ -I src/common/include                             
@@ -88,37 +80,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # the same services from job 1 (must add watch-telemetry and public-panel later)
+        # the same services from job 1
         service: [storage-service, watch-telemetry-svc]
     steps:
-        # bringing repo from outside (job 1)
+      # bringing repo from outside (job 1)
       - name: Checkout Repository
         uses: actions/checkout@v4
-        
-        # verifying changes
-      - name: Check for path changes
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            changed:
-              - 'src/${{ matrix.service }}/**'
-              - 'src/common/include/**'
 
-        # downloading .tar from job 1
+      # downloading .tar from job 1
       - name: Download Image Artifact
-        if: steps.filter.outputs.changed == 'true'
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ matrix.service }}
 
-        # loading docker image from tar downloaded
+      # loading docker image from tar downloaded
       - name: Load Docker Image
-        if: steps.filter.outputs.changed == 'true'
         run: docker load < ${{ matrix.service }}-image.tar
 
       - name: Run Trivy Vulnerability Scanner
-        if: steps.filter.outputs.changed == 'true'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'ztv-${{ matrix.service }}:${{ github.sha }}'
@@ -131,10 +110,119 @@ jobs:
           # it doesn't allow code to have high and critical problems
           severity: 'HIGH,CRITICAL'
 
-  # job 4: final tests and realeasing code to the infrastructure 
+  # job 4: final tests and IaC scan
+  test_and_scan:
+    name: Test, Push & Scan IaC
+    needs: [code_scan, image_scan]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [storage-service, watch-telemetry-svc]
+    steps:
+      - uses: actions/checkout@v4
+
+      # configuring AWS credential to tests
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      # building images on artifacts
+      - name: Download built images
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-${{ matrix.service }}
+          path: /tmp/images/ # Local garantido de download
+        
+      # loading those images
+      - name: Load images
+        run: docker load -i /tmp/images/${{ matrix.service }}-image.tar
+  
+      # testing storage service
+      - name: Test storage-service 
+        if: matrix.service == 'storage-service'
+        env:
+          QUEUE_URL: ${{ secrets.QUEUE_URL }}
+          IMAGE_TAG: ${{ github.sha }}
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+        run: chmod +x scripts/test_storage_service.sh && ./scripts/test_storage_service.sh
+
+      # testing watch telemetry service
+      - name: Test watch-telemetry-svc
+        if: matrix.service == 'watch-telemetry-svc'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: chmod +x scripts/test_watch_telemetry.sh && ./scripts/test_watch_telemetry.sh
+
+      # logging on github container registry (to post the image)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # pushing image to the repo (posting it)
+      - name: Push images to container registry
+        run: |
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker tag ztv-${{ matrix.service }}:${{ github.sha }} ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
+          docker push ghcr.io/$REPO_OWNER/${{ matrix.service }}:${{ github.sha }}
+
+      # static scan of terraform files
+      - name: Terrascan (IaC static scan)
+        uses: tenable/terrascan-action@main
+        with:
+          iac_type: 'terraform'
+          iac_version: 'v14'
+          policy_type: 'aws'
+          only_warn: true
+          iac_dir: 'terraform/'
+
+  # job 5: release to AWS
   release:
     name: Release to AWS
-    needs: [code_scan, image_scan] # it depends on job 2 and 3, to scan code and image
+    needs: [test_and_scan] # it depends on job 2 and 3, to scan code and image
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - run: echo "Here is ECR and terraform"
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false # to not show all the terraform logs
+
+      # setting my iot cert and keys 
+      - name: Recreate IoT Certificates from Secrets
+        env:
+          IOT_CERT: ${{ secrets.IOT_DEVICE_CRT }}
+          IOT_KEY: ${{ secrets.IOT_DEVICE_KEY }}
+        run: |
+          mkdir -p cert_and_keys
+          echo "$IOT_CERT" > cert_and_keys/iot_device_crt.pem
+          echo "$IOT_KEY" > cert_and_keys/iot_device_key.pem
+
+      - name: Terraform plan/apply
+        # first I must get the aws account (from the OIDC)
+        run: |
+          cd terraform
+
+          export TF_VAR_aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+          
+          echo "Starting Terraform on AWS account: $TF_VAR_aws_account_id"
+
+          terraform init
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+
+      - name: Deploy image (binary) to Lambda
+        run: |
+          echo "TODO: not tested yet"
