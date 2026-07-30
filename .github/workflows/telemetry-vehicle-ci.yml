@@ -200,6 +200,16 @@ jobs:
         with:
           terraform_wrapper: false # to not show all the terraform logs
 
+      # setting my iot cert and keys 
+      - name: Recreate IoT Certificates from Secrets
+        env:
+          IOT_CERT: ${{ secrets.IOT_DEVICE_CRT }}
+          IOT_KEY: ${{ secrets.IOT_DEVICE_KEY }}
+        run: |
+          mkdir -p cert_and_keys
+          echo "$IOT_CERT" > cert_and_keys/iot_device_crt.pem
+          echo "$IOT_KEY" > cert_and_keys/iot_device_key.pem
+
       - name: Terraform plan/apply
         # first I must get the aws account (from the OIDC)
         run: |
