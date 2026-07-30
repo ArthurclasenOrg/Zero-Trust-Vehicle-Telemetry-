@@ -3,6 +3,8 @@ set -e
 
 echo "Sending message to QUEUE_URL: $QUEUE_URL"
 
+TAG="${IMAGE_TAG:-latest}"
+
 # sending 3 messages to sqs
 aws sqs send-message \
   --queue-url "$QUEUE_URL" \
@@ -25,4 +27,4 @@ docker run --rm \
   -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
   -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
   -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
-  ztv-storage-service
+  ztv-storage-service:${TAG}

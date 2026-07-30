@@ -144,11 +144,14 @@ jobs:
         if: matrix.service == 'storage-service'
         env:
           QUEUE_URL: ${{ secrets.QUEUE_URL }}
+          IMAGE_TAG: ${{ github.sha }}
         run: chmod +x scripts/test_storage_service.sh && ./scripts/test_storage_service.sh
 
       # testing watch telemetry service
       - name: Test watch-telemetry-svc
         if: matrix.service == 'watch-telemetry-svc'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: chmod +x scripts/test_watch_telemetry.sh && ./scripts/test_watch_telemetry.sh
 
       # logging on github container registry (to post the image)
