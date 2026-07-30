@@ -195,6 +195,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
+      - name: Terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false # to not show all the terraform logs
+
       - name: Terraform plan/apply
         run: |
           cd terraform
