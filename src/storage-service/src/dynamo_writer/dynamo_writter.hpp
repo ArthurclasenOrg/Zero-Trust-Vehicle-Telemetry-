@@ -13,12 +13,12 @@
 class DynamoWritter
 {
 private:
-    const Aws::String& tableName;
     VehicleTelemetryState vehicle;
     std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient;
+    Aws::String getTableName();
 public:
-    DynamoWritter(const Aws::String& tableName, VehicleTelemetryState& vehicle, 
-        std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
+    DynamoWritter(VehicleTelemetryState& vehicle, 
+        Aws::Client::ClientConfiguration clientConfig);
 
     bool dynamoWrite();
 };

@@ -1,24 +1,46 @@
-# ignoring env files
-*.env
+# ignoring git files
+.git/
+.github/
+.gitignore
+.idea/
+.vscode/
+README.md
 
-# ignoring local build files
+# ignoring any scripts or infra code
+terraform/
+k8s/
+scripts/
+cert_and_keys/
+
+# ignoring envs and keys
+.env
+*.env
+.env.*
+*.aws
+*.pem
+*.key
+
+# ignoring artifacts and builds objects
 **/build/
 **/CMakeCache.txt
 **/CMakeFiles/
 **/cmake_install.cmake
 **/Makefile
+**/Makefile2
+**/cmake.check_cache
+**/CMakeConfigureLog.yaml
+**/TargetDirectories.txt
+**/*.o
+**/*.d
 
-# ignore IDEs
-.idea/
-.vscode/
-
-# ignore scripts
-# **/tests/
-src/storage-service/tests
-
-# ignoring exec
+# ignoring local binaries
 **/storage_service
+**/watch_telemetry_service
+**/watch_telemetry_local_test
 
+# ignoring test and obsolete code
+**/tests/
+src/storage-service/src/sqs/
 
 
 

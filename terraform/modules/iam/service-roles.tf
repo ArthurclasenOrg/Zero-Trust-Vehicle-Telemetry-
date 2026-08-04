@@ -35,7 +35,7 @@ resource "aws_iam_role_policy" "store_car_policy" {
                 Sid    = "S3WriteRaw"
                 Action = ["s3:PutObject"]
                 Effect = "Allow"
-                Resource = "${var.bucket_arn}/raw/*"
+                Resource = ["${var.bucket_arn}/raw/*", "${var.bucket_arn}/vehicles/*"]
             },
             {   # using here (/public-history) to write on bucket for public visit
                 Sid    = "S3WritePublicHistory"

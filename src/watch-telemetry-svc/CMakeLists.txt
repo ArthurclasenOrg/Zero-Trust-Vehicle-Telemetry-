@@ -19,7 +19,7 @@ find_package(ZLIB REQUIRED)
 
 # defining running object and files (.cpp)
 add_executable(watch_telemetry_service
-    tests/local_test_main.cpp
+    src/main.cpp
     src/handler/handler.cpp 
     src/dynamo_reader/dynamo_reader.cpp 
 )

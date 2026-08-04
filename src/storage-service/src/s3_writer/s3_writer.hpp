@@ -12,15 +12,15 @@
 class S3Writer
 {
 private:
-    const Aws::String& bucketName;
     const Aws::String& fileKey;
     const VehicleTelemetryState vehicle;
     std::shared_ptr<Aws::S3::S3Client> s3Client;
 
     Aws::String generateFileContent() const;
+    Aws::String getBucketName() const;
 public:
-    S3Writer(const Aws::String& bucketName, const Aws::String& fileKey, const VehicleTelemetryState& vehicle, 
-        std::shared_ptr<Aws::S3::S3Client> s3Client);
+    S3Writer(const Aws::String& fileKey, const VehicleTelemetryState& vehicle, 
+        Aws::Client::ClientConfiguration clientConfig);
     
     bool s3Write() const;
 };

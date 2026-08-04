@@ -2,14 +2,12 @@
 
 using namespace std;
 
-S3Writer::S3Writer(const Aws::String& bucketName, 
-                    const Aws::String& fileKey, 
-                    const VehicleTelemetryState& vehicle, 
-                    std::shared_ptr<Aws::S3::S3Client> s3Client)
-    : bucketName(bucketName),
-      fileKey(fileKey),
+S3Writer::S3Writer(const Aws::String& fileKey, 
+            const VehicleTelemetryState& vehicle, 
+            Aws::Client::ClientConfiguration clientConfig)
+    : fileKey(fileKey),
       vehicle(vehicle),
-      s3Client(s3Client) {}
+      s3Client(make_shared<Aws::S3::S3Client>(clientConfig)) {}
 
 Aws::String S3Writer::generateFileContent() const
 {
@@ -34,7 +32,8 @@ bool S3Writer::s3Write() const
 {
     // creating the request
     Aws::S3::Model::PutObjectRequest request;
-    request.SetBucket(this->bucketName);
+
+    request.SetBucket(getBucketName());
     request.SetKey(this->fileKey);
 
     // generating file content (JSON)
@@ -56,11 +55,24 @@ bool S3Writer::s3Write() const
     // validates result
     if (outcome.IsSuccess()) {
         cout << "File '" << fileKey << " saved with success on bucket '"
-             << bucketName << "'!" << endl;
+             << endl;
         return true;
     } else {
         cerr << "Fail on saving on S3: " << outcome.GetError().GetMessage() << endl;
     }
 
     return false;
+}
+
+// method to get bucket name
+Aws::String S3Writer::getBucketName() const
+{
+    // getting bucket name
+    const char* envBuckName = std::getenv("BUCKET_NAME");
+    if (!envBuckName) {
+        std::cerr << "BUCKET_NAME not defined" << std::endl;
+        return "";
+    }
+    cout << envBuckName << endl;
+    return envBuckName;
 }

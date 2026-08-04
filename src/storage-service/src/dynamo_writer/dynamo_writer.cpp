@@ -4,18 +4,18 @@
 
 using namespace std;
 
-DynamoWritter::DynamoWritter(const Aws::String& tableName, 
-                            VehicleTelemetryState& vehicle, 
-                            std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient)
-    :  tableName(tableName),
-       vehicle(vehicle),
-       dynamoClient(dynamoClient) {}
+DynamoWritter::DynamoWritter(VehicleTelemetryState& vehicle, 
+                            Aws::Client::ClientConfiguration clientConfig)
+    :  vehicle(vehicle),
+       dynamoClient(make_shared<Aws::DynamoDB::DynamoDBClient>(clientConfig)) {}
 
 bool DynamoWritter::dynamoWrite()
 {
     // preparing request object
     Aws::DynamoDB::Model::PutItemRequest putItemRequest;
-    putItemRequest.SetTableName(this->tableName);
+
+    // defining the table name for request
+    putItemRequest.SetTableName(getTableName());
 
     // making the item (column by column)
     //--------------------------------------------
@@ -48,7 +48,7 @@ bool DynamoWritter::dynamoWrite()
     ATTR_VAL diagnosticCodeAttr;
     diagnosticCodeAttr.SetS(this->vehicle.diagnostic_code);
     putItemRequest.AddItem("diagnostic_code", diagnosticCodeAttr);
-    
+
     // schema version column
     ATTR_VAL schemaVersionAttr;
     schemaVersionAttr.SetN(this->vehicle.schema_version);
@@ -73,4 +73,15 @@ bool DynamoWritter::dynamoWrite()
     return false;
 }
 
+// method to get table name
+Aws::String DynamoWritter::getTableName()
+{
+    // getting table name
+    const char* envTableName = std::getenv("TABLE_NAME");
+    if (!envTableName) {
+        std::cerr << "TABLE_NAME not defined" << std::endl;
+        return "";
+    }
+    return envTableName;
+}
 

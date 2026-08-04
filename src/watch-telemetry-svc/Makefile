@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named watch_telemetry_local_test
+# Target rules for targets named watch_telemetry_service
 
 # Build rule for target.
-watch_telemetry_local_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 watch_telemetry_local_test
-.PHONY : watch_telemetry_local_test
+watch_telemetry_service: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 watch_telemetry_service
+.PHONY : watch_telemetry_service
 
 # fast build rule for target.
-watch_telemetry_local_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/build
-.PHONY : watch_telemetry_local_test/fast
+watch_telemetry_service/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/build
+.PHONY : watch_telemetry_service/fast
 
 src/dynamo_reader/dynamo_reader.o: src/dynamo_reader/dynamo_reader.cpp.o
 .PHONY : src/dynamo_reader/dynamo_reader.o
 
 # target to build an object file
 src/dynamo_reader/dynamo_reader.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/dynamo_reader/dynamo_reader.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/dynamo_reader/dynamo_reader.cpp.o
 .PHONY : src/dynamo_reader/dynamo_reader.cpp.o
 
 src/dynamo_reader/dynamo_reader.i: src/dynamo_reader/dynamo_reader.cpp.i
@@ -142,7 +142,7 @@ src/dynamo_reader/dynamo_reader.i: src/dynamo_reader/dynamo_reader.cpp.i
 
 # target to preprocess a source file
 src/dynamo_reader/dynamo_reader.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/dynamo_reader/dynamo_reader.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/dynamo_reader/dynamo_reader.cpp.i
 .PHONY : src/dynamo_reader/dynamo_reader.cpp.i
 
 src/dynamo_reader/dynamo_reader.s: src/dynamo_reader/dynamo_reader.cpp.s
@@ -150,7 +150,7 @@ src/dynamo_reader/dynamo_reader.s: src/dynamo_reader/dynamo_reader.cpp.s
 
 # target to generate assembly for a file
 src/dynamo_reader/dynamo_reader.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/dynamo_reader/dynamo_reader.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/dynamo_reader/dynamo_reader.cpp.s
 .PHONY : src/dynamo_reader/dynamo_reader.cpp.s
 
 src/handler/handler.o: src/handler/handler.cpp.o
@@ -158,7 +158,7 @@ src/handler/handler.o: src/handler/handler.cpp.o
 
 # target to build an object file
 src/handler/handler.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/handler/handler.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/handler/handler.cpp.o
 .PHONY : src/handler/handler.cpp.o
 
 src/handler/handler.i: src/handler/handler.cpp.i
@@ -166,7 +166,7 @@ src/handler/handler.i: src/handler/handler.cpp.i
 
 # target to preprocess a source file
 src/handler/handler.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/handler/handler.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/handler/handler.cpp.i
 .PHONY : src/handler/handler.cpp.i
 
 src/handler/handler.s: src/handler/handler.cpp.s
@@ -174,32 +174,32 @@ src/handler/handler.s: src/handler/handler.cpp.s
 
 # target to generate assembly for a file
 src/handler/handler.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/src/handler/handler.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/handler/handler.cpp.s
 .PHONY : src/handler/handler.cpp.s
 
-tests/local_test_main.o: tests/local_test_main.cpp.o
-.PHONY : tests/local_test_main.o
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
 
 # target to build an object file
-tests/local_test_main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/tests/local_test_main.cpp.o
-.PHONY : tests/local_test_main.cpp.o
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
 
-tests/local_test_main.i: tests/local_test_main.cpp.i
-.PHONY : tests/local_test_main.i
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-tests/local_test_main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/tests/local_test_main.cpp.i
-.PHONY : tests/local_test_main.cpp.i
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-tests/local_test_main.s: tests/local_test_main.cpp.s
-.PHONY : tests/local_test_main.s
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-tests/local_test_main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_local_test.dir/build.make CMakeFiles/watch_telemetry_local_test.dir/tests/local_test_main.cpp.s
-.PHONY : tests/local_test_main.cpp.s
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/watch_telemetry_service.dir/build.make CMakeFiles/watch_telemetry_service.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 # Help Target
 help:
@@ -209,16 +209,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... watch_telemetry_local_test"
+	@echo "... watch_telemetry_service"
 	@echo "... src/dynamo_reader/dynamo_reader.o"
 	@echo "... src/dynamo_reader/dynamo_reader.i"
 	@echo "... src/dynamo_reader/dynamo_reader.s"
 	@echo "... src/handler/handler.o"
 	@echo "... src/handler/handler.i"
 	@echo "... src/handler/handler.s"
-	@echo "... tests/local_test_main.o"
-	@echo "... tests/local_test_main.i"
-	@echo "... tests/local_test_main.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
 .PHONY : help
 
 

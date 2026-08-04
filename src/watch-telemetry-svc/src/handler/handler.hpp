@@ -9,9 +9,6 @@
 class Handler
 {
 private:
-    // dynamo client
-    std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient;
-
     // GET /vehicle/{vehicle_id} -> last state from a vehicle
     aws::lambda_runtime::invocation_response getVehicleState(const std::string& vehicleId);
 
@@ -19,7 +16,7 @@ private:
     aws::lambda_runtime::invocation_response getAnomalies();
 
 public:
-    explicit Handler(std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
+    Handler();
 
     aws::lambda_runtime::invocation_response handleRequest(
         aws::lambda_runtime::invocation_request const& request);

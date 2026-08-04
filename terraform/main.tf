@@ -53,6 +53,7 @@ module "lambda" {
   watch_telemetry_func_name = local.watch_telemetry_func_name
 
   aws_account_id = var.aws_account_id
+  table_name = var.table_name
   project_name = var.project_name
 }
 
@@ -79,6 +80,10 @@ module "cloudfront" {
   source = "./modules/cloudfront"
   public_pannel_svc_function_url = module.lambda.public_panel_svc_function_url
   project_name = var.project_name
+}
+
+module "ecr" {
+  source = "./modules/ecr"
 }
 
 terraform {

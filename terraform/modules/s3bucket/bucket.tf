@@ -6,20 +6,12 @@ resource "aws_s3_bucket" "bucket" {
 
 data "aws_caller_identity" "current" {}
 
-# a key to encrypt bucket (it saves for 7 days in case of terraform destroy)
-resource "aws_kms_key" "kms_key_for_bucket" {
-  description = "KMS key for bucket object"
-  deletion_window_in_days = 7
-  enable_key_rotation = true
-}
-
 # applying encryption to the bucket
 resource "aws_s3_bucket_server_side_encryption_configuration" "bucket_encr_config" {
   bucket = aws_s3_bucket.bucket.id
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.kms_key_for_bucket.arn
-      sse_algorithm     = "aws:kms"
+      sse_algorithm = "AES256"
     }
   }
 }

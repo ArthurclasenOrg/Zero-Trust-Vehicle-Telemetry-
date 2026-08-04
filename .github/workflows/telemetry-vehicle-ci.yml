@@ -3,9 +3,9 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "job4-pipeline"]
+    branches: ["main", "feature/public-panel-lambda-storage-k8s"]
   pull_request:
-    branches: ["main", "job4-pipeline"]
+    branches: ["main", "feature/public-panel-lambda-storage-k8s"]
 
 permissions: 
   id-token: write   # for AWS OIDC work

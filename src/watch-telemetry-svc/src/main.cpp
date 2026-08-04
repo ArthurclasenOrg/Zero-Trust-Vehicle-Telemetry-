@@ -5,8 +5,6 @@
 #include <aws/core/utils/logging/LogLevel.h>
 #include <aws/dynamodb/DynamoDBClient.h>
 
-// region
-const std::string region = "us-east-1";
 using namespace aws::lambda_runtime;
 
 int main()
@@ -16,15 +14,8 @@ int main()
     // options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options); // initializing API
 
-    // setting the client (region = us-east-1)
-    Aws::Client::ClientConfiguration clientConfig;
-    clientConfig.region = region;
-
-    // setting all the clients 
-    auto dynamoClient = std::make_shared<Aws::DynamoDB::DynamoDBClient>(clientConfig);
-
     // creating my handler object
-    auto handler = make_unique<Handler>(dynamoClient);
+    auto handler = make_unique<Handler>();
     
     // running my lambda func (handleRequest)
     run_handler([&handler](invocation_request const& request){
@@ -34,3 +25,4 @@ int main()
     Aws::ShutdownAPI(options); // shutting down when ended
     return 0;
 }
+
