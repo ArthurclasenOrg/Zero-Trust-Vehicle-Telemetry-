@@ -139,6 +139,10 @@ jobs:
       - name: Load images
         run: docker load -i /tmp/images/${{ matrix.service }}-image.tar
   
+      # logging on ECR 
+      - name: ECR login
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
       # testing storage service
       - name: Test storage-service 
         if: matrix.service == 'storage-service'
