@@ -15,3 +15,9 @@ variable "aws_account_id" {
   description = "AWS account ID"
   sensitive = true
 }
+
+variable "table_name" {
+  type = string
+  description = "DynamoDB table name"
+  sensitive = true
+}

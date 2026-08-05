@@ -12,11 +12,11 @@
 class DynamoReader
 {
 private:
-    const Aws::String& tableName;
     std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient;
+    
+    Aws::String getTableName();
 public:
-    DynamoReader(const Aws::String& tableName, 
-        std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
+    explicit DynamoReader(Aws::Client::ClientConfiguration clientConfig);
 
     bool dynamoReadSingleKey(VehicleTelemetryState& vehicle);
     bool dynamoReadDoubleKey(std::vector<VehicleTelemetryState>& vehicles);

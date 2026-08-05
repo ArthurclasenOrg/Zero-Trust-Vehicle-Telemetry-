@@ -1,47 +1,10 @@
 #include "handler.hpp"
-#include "queue.hpp"
-#include "../dynamo_writer/dynamo_writter.hpp"
-#include "../s3_writer/s3_writer.hpp"
 
 using namespace std; 
+using namespace aws::lambda_runtime;
+using namespace Aws::Utils::Json;
 
-StorageHandler::StorageHandler(const Aws::String& queueUrl, 
-    std::shared_ptr<Aws::SQS::SQSClient> sqsClient,
-    std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient,
-    std::shared_ptr<Aws::S3::S3Client> s3Client)
-    : queueUrl(queueUrl),
-      sqsClient(sqsClient),
-      dynamoClient(dynamoClient),
-      s3Client(s3Client) {}
-
-// processing queue (it returns the message object with receiptHandle and body data)
-optional<const Aws::SQS::Model::Message> StorageHandler::processSQSQueue()
-{
-    // configuring the request to push to 1 message
-    Aws::SQS::Model::ReceiveMessageRequest request;
-
-    request.SetQueueUrl(this->queueUrl);
-    request.SetMaxNumberOfMessages(1);
-    request.SetWaitTimeSeconds(5); // polling of 5 seconds
-
-    // call to SQS
-    auto outcome = this->sqsClient->ReceiveMessage(request);
-    
-    if (outcome.IsSuccess()){ // if I receive messages
-        const auto& messages = outcome.GetResult().GetMessages();
-
-        if (!messages.empty()){ // if the message is not empty
-            const auto& message = messages[0];
-            // returning message (with body and receipt handle)
-            return message;
-        } else {
-            cout << "No messages on queue" << endl;
-        }
-    } else {
-        cerr << "Error on searching message: " << outcome.GetError().GetMessage() << endl;
-    }
-    return nullopt; // empty object 
-}
+StorageHandler::StorageHandler(){}
 
 unique_ptr<VehicleTelemetryState> StorageHandler::parseJsonToPointer(const Aws::String& jsonBody)
 {
@@ -70,82 +33,75 @@ unique_ptr<VehicleTelemetryState> StorageHandler::parseJsonToPointer(const Aws::
     return data; // returning the smart pointer with the data correctly allocated
 }
 
-void StorageHandler::deleteMessage(Aws::String receiptHandle)
-{
-    Aws::SQS::Model::DeleteMessageRequest deleteRequest;
-    deleteRequest.SetQueueUrl(this->queueUrl);  // deleting message from this queue
-    deleteRequest.SetReceiptHandle(receiptHandle);
-
-    auto deleteOutcome = sqsClient->DeleteMessage(deleteRequest); // deleting message
-    if (deleteOutcome.IsSuccess()){     // if success on deleting
-        cout << "Message removed from queue with success!" << endl;
-    }
-}
-
-// polling for thread 1 (consumer from sqs and producer of vehicle data for thread 2)
-void StorageHandler::startPolling()
-{
-    cout << "Initializing SQS Polling (Ctrl+C) to stop" << endl;
-
-    while (true) {
-        // get json from sqs
-        auto messageOpt = this->processSQSQueue();
-    
-        // if it catches something, process
-        if (messageOpt.has_value()) {
-            const auto& message = messageOpt.value();
-            unique_ptr<VehicleTelemetryState> vehicle = parseJsonToPointer(message.GetBody());
-
-            if (vehicle) {
-                // creating message to put on queue
-                SqsMessageWrapper vehicleDataMessage;
-                vehicleDataMessage.receiptHandle = message.GetReceiptHandle();
-                vehicleDataMessage.vehicleData = move(vehicle);
-                queue.produce(move(vehicleDataMessage));
-            }
-        }
-    }
-}
-
 Aws::String buildS3Key(const VehicleTelemetryState& telemetry) {
     // Exemplo do formato: vehicles/vehicle-01/1721490000000.json
     return "vehicles/" + telemetry.vehicle_id + "/" + 
            std::to_string(telemetry.last_seen_epoch_ms) + ".json";
 }
 
-// thread 2 deals with the rest of the job (detect anomaly->write on dynamoDB and S3->delete data from sqs) 
-void StorageHandler::handleVehicleData()
+invocation_response StorageHandler::initializeHandler(invocation_request const& request)
 {
-    cout << "Initializing Data Consumption" << endl;
+    try {
+        // setting client config
+        Aws::Client::ClientConfiguration config;
+        config.region = "us-east-1";
 
-    // getting bucket name
-    const char* envBuckName = std::getenv("BUCKET_NAME");
-    if (!envBuckName) {std::cerr << "BUCKET_NAME not defined" << std::endl;return;}
+        // vehicle info
+        unique_ptr<VehicleTelemetryState> vehicle;
 
-    while (true) {
-        SqsMessageWrapper message;
-        queue.consume(message); // consuming message from queue
+        // parsing payload 
+        JsonValue json_value(request.payload);
+        JsonView json_view = json_value.View();
+
+        // verifies if it has errors on json
+        if (!json_value.WasParseSuccessful()){
+            cerr << "Error parsing JSON." << endl;
+            return invocation_response::failure(string("Error on JSON parsing"), string("ParseError"));
+        }
+
+        // verifies if event has records (it must come on events)
+        if (!json_view.ValueExists("Records")) {
+            cerr << "Invalid event or no messages (Records)." << endl;
+        }
+
+        Aws::Utils::Array<JsonView> records = json_view.GetArray("Records");
+
+        // going through each record (message)
+        for (size_t i = 0; i < records.GetLength(); i++) {
+            JsonView record = records[i];
+
+            // getting body (vehicle) 
+            string body = record.ValueExists("body") ? record.GetString("body").c_str() : "";
         
-        // prints vehicle data information and receipt handle
-        cout << message.vehicleData->toString() << endl;
-        cout << message.receiptHandle << endl;
-        
-        // putting on the anomaly detector
-        bool isAnomaly = detectAnomaly(*message.vehicleData);
-        if (isAnomaly) cout << "anomaly!" << endl;
-        
-        // writing on dynamoDB (passing the name of table too)
-        const Aws::String tableName = "vehicle-telemetry-state";
-        auto dyanmo = std::make_unique<DynamoWritter>(tableName, *message.vehicleData, this->dynamoClient);
-        dyanmo->dynamoWrite();
+            // parsing the json to a vehicle object
+            vehicle = parseJsonToPointer(body);
+            if (!vehicle) {
+                cerr << "Fail on parsing vehicle JSON" << endl;
+                continue;
+            }
+            
+            // printing vehicle informations
+            cout << vehicle->toString() << endl;
 
-        // writing on the s3 bucket
-        const Aws::String bucketName = envBuckName;
-        const Aws::String fileKey = buildS3Key(*message.vehicleData);
-        auto s3bucket = std::make_unique<S3Writer>(bucketName, fileKey, *message.vehicleData, this->s3Client);
-        s3bucket->s3Write();
+            // putting on the anomaly detector
+            bool isAnomaly = detectAnomaly(*vehicle);
+            if (isAnomaly) cout << "anomaly!" << endl;
 
-        this->deleteMessage(message.receiptHandle);
-        cout << "Deleted Message with success" << endl;
+            // writing on dynamoDB 
+            auto dyanmo = std::make_unique<DynamoWritter>(*vehicle, config);
+            if (dyanmo->dynamoWrite()) cout << "Written on dynamo." << endl;
+            
+            // writing on the s3 bucket
+            const Aws::String fileKey = buildS3Key(*vehicle);
+            auto s3bucket = std::make_unique<S3Writer>(fileKey, *vehicle, config);
+            if (s3bucket->s3Write()) cout << "Written on bucket" << endl;
+        }
+
+        cout << "Finished processing. AWS is cleaning the queue" << endl;
+        return invocation_response::success(string("Batch processed with success"), string("application/json"));
+
+    } catch (const exception& e) {
+        cerr << "Fatal error on handler: " << e.what() << endl;
+        return invocation_response::failure(string(e.what()), string("InternalError"));
     }
 }

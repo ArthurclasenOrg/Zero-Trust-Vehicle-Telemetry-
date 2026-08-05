@@ -56,6 +56,12 @@ variable "aws_account_id" {
   sensitive = true
 }
 
+variable "table_name" {
+  type = string
+  description = "DynamoDB table name"
+  sensitive = true
+}
+
 variable "project_name" {
   type = string
   description = "Project name"

@@ -201,30 +201,6 @@ src/handler/handler.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/handler/handler.cpp.s
 .PHONY : src/handler/handler.cpp.s
 
-src/handler/queue.o: src/handler/queue.cpp.o
-.PHONY : src/handler/queue.o
-
-# target to build an object file
-src/handler/queue.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/handler/queue.cpp.o
-.PHONY : src/handler/queue.cpp.o
-
-src/handler/queue.i: src/handler/queue.cpp.i
-.PHONY : src/handler/queue.i
-
-# target to preprocess a source file
-src/handler/queue.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/handler/queue.cpp.i
-.PHONY : src/handler/queue.cpp.i
-
-src/handler/queue.s: src/handler/queue.cpp.s
-.PHONY : src/handler/queue.s
-
-# target to generate assembly for a file
-src/handler/queue.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/handler/queue.cpp.s
-.PHONY : src/handler/queue.cpp.s
-
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -249,6 +225,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/s3_writer/s3_writer.o: src/s3_writer/s3_writer.cpp.o
+.PHONY : src/s3_writer/s3_writer.o
+
+# target to build an object file
+src/s3_writer/s3_writer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/s3_writer/s3_writer.cpp.o
+.PHONY : src/s3_writer/s3_writer.cpp.o
+
+src/s3_writer/s3_writer.i: src/s3_writer/s3_writer.cpp.i
+.PHONY : src/s3_writer/s3_writer.i
+
+# target to preprocess a source file
+src/s3_writer/s3_writer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/s3_writer/s3_writer.cpp.i
+.PHONY : src/s3_writer/s3_writer.cpp.i
+
+src/s3_writer/s3_writer.s: src/s3_writer/s3_writer.cpp.s
+.PHONY : src/s3_writer/s3_writer.s
+
+# target to generate assembly for a file
+src/s3_writer/s3_writer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_service.dir/build.make CMakeFiles/storage_service.dir/src/s3_writer/s3_writer.cpp.s
+.PHONY : src/s3_writer/s3_writer.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -267,12 +267,12 @@ help:
 	@echo "... src/handler/handler.o"
 	@echo "... src/handler/handler.i"
 	@echo "... src/handler/handler.s"
-	@echo "... src/handler/queue.o"
-	@echo "... src/handler/queue.i"
-	@echo "... src/handler/queue.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/s3_writer/s3_writer.o"
+	@echo "... src/s3_writer/s3_writer.i"
+	@echo "... src/s3_writer/s3_writer.s"
 .PHONY : help
 
 

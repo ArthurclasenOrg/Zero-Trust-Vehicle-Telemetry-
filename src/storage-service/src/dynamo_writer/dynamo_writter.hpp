@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "../../../common/include/vehicle_telemetry_state.hpp"
+#include "../../../common/include/is_test.hpp"
 
 #ifndef DYNAMO_WRITTER_HPP
 #define DYNAMO_WRITTER_HPP
@@ -13,12 +14,12 @@
 class DynamoWritter
 {
 private:
-    const Aws::String& tableName;
     VehicleTelemetryState vehicle;
     std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient;
+    Aws::String getTableName();
 public:
-    DynamoWritter(const Aws::String& tableName, VehicleTelemetryState& vehicle, 
-        std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient);
+    DynamoWritter(VehicleTelemetryState& vehicle, 
+        Aws::Client::ClientConfiguration clientConfig);
 
     bool dynamoWrite();
 };

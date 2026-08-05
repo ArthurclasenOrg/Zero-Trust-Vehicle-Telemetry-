@@ -23,10 +23,18 @@ WORKDIR /build_env
 RUN git clone --recurse-submodules --depth 1 https://github.com/aws/aws-sdk-cpp.git
 WORKDIR /build_env/aws-sdk-cpp/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_ONLY="sqs;s3;dynamodb" \
+          -DBUILD_ONLY="s3;dynamodb" \
           -DENABLE_TESTING=OFF \
           -DBUILD_SHARED_LIBS=OFF \
           .. && \
+    make -j$(nproc) && \
+    make install
+
+# installing lambda runtime
+WORKDIR /build_env
+RUN git clone https://github.com/awslabs/aws-lambda-cpp.git
+WORKDIR /build_env/aws-lambda-cpp/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF .. && \
     make -j$(nproc) && \
     make install
 

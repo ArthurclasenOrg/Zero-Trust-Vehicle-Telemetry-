@@ -3,9 +3,9 @@ name: Telemetry Vehicle Security Pipeline
 # pipeline activated at each commit
 on:
   push:
-    branches: ["main", "job4-pipeline"]
+    branches: ["main", "feature/storage-and-watch-deployed"]
   pull_request:
-    branches: ["main", "job4-pipeline"]
+    branches: ["main", "feature/storage-and-watch-deployed"]
 
 permissions: 
   id-token: write   # for AWS OIDC work
@@ -139,6 +139,10 @@ jobs:
       - name: Load images
         run: docker load -i /tmp/images/${{ matrix.service }}-image.tar
   
+      # logging on ECR 
+      - name: ECR login
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
       # testing storage service
       - name: Test storage-service 
         if: matrix.service == 'storage-service'
@@ -153,6 +157,7 @@ jobs:
         if: matrix.service == 'watch-telemetry-svc'
         env:
           IMAGE_TAG: ${{ github.sha }}
+          TABLE_NAME: ${{ secrets.TABLE_NAME }}
         run: chmod +x scripts/test_watch_telemetry.sh && ./scripts/test_watch_telemetry.sh
 
       # logging on github container registry (to post the image)
@@ -216,6 +221,8 @@ jobs:
           cd terraform
 
           export TF_VAR_aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+
+          export TF_VAR_table_name="${{ secrets.TABLE_NAME }}"
           
           echo "Starting Terraform on AWS account: $TF_VAR_aws_account_id"
 

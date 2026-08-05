@@ -23,6 +23,9 @@ src/watch-telemetry-svc/CMakeCache.txt
 src/watch-telemetry-svc/watch_telemetry_local_test
 src/watch-telemetry-svc/watch_telemetry_service
 
+# scripts to push services to ecr
+auto_scripts/
+
 # environment
 *.env
 *.env.aws

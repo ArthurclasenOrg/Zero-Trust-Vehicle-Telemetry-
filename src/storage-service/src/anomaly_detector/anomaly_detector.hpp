@@ -1,4 +1,4 @@
-#include "../handler/queue.hpp"
+#include "../../../common/include/vehicle_telemetry_state.hpp"
 
 #ifndef ANOMALY_DETECTOR_HPP
 #define ANOMALY_DETECTOR_HPP

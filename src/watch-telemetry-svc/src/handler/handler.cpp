@@ -6,8 +6,7 @@
 
 using namespace aws::lambda_runtime;
 
-Handler::Handler(std::shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient)
-    : dynamoClient(dynamoClient) {}
+Handler::Handler(){}
 
 invocation_response Handler::handleRequest(invocation_request const& request)
 {
@@ -36,13 +35,17 @@ invocation_response Handler::handleRequest(invocation_request const& request)
 // getting a specific vehicle state
 invocation_response Handler::getVehicleState(const std::string& vehicleId)
 {
+    // setting the client (region = us-east-1)
+    Aws::Client::ClientConfiguration clientConfig;
+    clientConfig.region = "us-east-1";
+
     // declaring my vehicle object
     auto vehicle = make_unique<VehicleTelemetryState>();
     vehicle->vehicle_id = vehicleId;
 
     // creating dynamo object to search 
     const Aws::String tableName = "vehicle-telemetry-state";
-    auto dynamo = make_unique<DynamoReader>(tableName, this->dynamoClient);
+    auto dynamo = make_unique<DynamoReader>(clientConfig);
 
     // searching for vehicle
     if (dynamo->dynamoReadSingleKey(*vehicle)){
@@ -74,12 +77,16 @@ invocation_response Handler::getVehicleState(const std::string& vehicleId)
 // getting all vehicles with anomalies
 invocation_response Handler::getAnomalies()
 {
+    // setting the client (region = us-east-1)
+    Aws::Client::ClientConfiguration clientConfig;
+    clientConfig.region = "us-east-1";
+
     // declaring my vector
     auto vehicles = vector<VehicleTelemetryState>();
 
     // creating dynamo object to query
     const Aws::String tableName = "vehicle-telemetry-state";
-    auto dynamo = make_unique<DynamoReader>(tableName, this->dynamoClient);
+    auto dynamo = make_unique<DynamoReader>(clientConfig);
 
     // searching for vehicles based on anomaly
     if (dynamo->dynamoReadDoubleKey(vehicles)){

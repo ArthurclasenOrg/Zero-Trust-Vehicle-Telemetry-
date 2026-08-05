@@ -4,16 +4,14 @@
 
 using namespace std;
 
-DynamoReader::DynamoReader(const Aws::String& tableName, 
-                            shared_ptr<Aws::DynamoDB::DynamoDBClient> dynamoClient)
-    :  tableName(tableName),
-       dynamoClient(dynamoClient) {}
+DynamoReader::DynamoReader(Aws::Client::ClientConfiguration clientConfig)
+    :  dynamoClient(make_shared<Aws::DynamoDB::DynamoDBClient>(clientConfig)) {}
 
 bool DynamoReader::dynamoReadSingleKey(VehicleTelemetryState& vehicle)
 {
     // setting a request GetItem
     Aws::DynamoDB::Model::GetItemRequest request;
-    request.SetTableName(this->tableName);
+    request.SetTableName(getTableName());
 
     // setting the primary key (partition key + sort key)
     Aws::DynamoDB::Model::AttributeValue pk;
@@ -55,7 +53,7 @@ bool DynamoReader::dynamoReadDoubleKey(std::vector<VehicleTelemetryState>& vehic
 {
     // setting a request Query
     Aws::DynamoDB::Model::QueryRequest request;
-    request.SetTableName(this->tableName);
+    request.SetTableName(getTableName());
 
     // setting index name
     request.SetIndexName("Vehicles-with-anomalies");
@@ -98,4 +96,16 @@ bool DynamoReader::dynamoReadDoubleKey(std::vector<VehicleTelemetryState>& vehic
         return false;
     }
     return true;
+}
+
+// method to get table name
+Aws::String DynamoReader::getTableName()
+{
+    // getting table name
+    const char* envTableName = std::getenv("TABLE_NAME");
+    if (!envTableName) {
+        std::cerr << "TABLE_NAME not defined" << std::endl;
+        return "";
+    }
+    return envTableName;
 }
