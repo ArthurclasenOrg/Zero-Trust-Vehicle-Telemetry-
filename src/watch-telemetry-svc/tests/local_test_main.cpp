@@ -7,10 +7,7 @@ int main() {
     Aws::SDKOptions options;
     Aws::InitAPI(options);
     {
-        Aws::Client::ClientConfiguration clientConfig;
-        clientConfig.region = "us-east-1";
-        auto dynamoClient = std::make_shared<Aws::DynamoDB::DynamoDBClient>(clientConfig);
-        Handler handler(dynamoClient);
+        Handler handler{};
 
         // simulating an event calling /?vehicle_id=vehicle-01
         aws::lambda_runtime::invocation_request request;
@@ -31,6 +28,7 @@ int main() {
         auto response2 = handler.handleRequest(request2);
         std::cout << "1. Sucess? " << response2.is_success() << std::endl;
         std::cout << "2. Body: " << response2.get_payload() << std::endl;
+        return 0;
 
     }
     Aws::ShutdownAPI(options);

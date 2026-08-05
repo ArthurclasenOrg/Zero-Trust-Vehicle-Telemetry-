@@ -49,6 +49,11 @@ bool S3Writer::s3Write() const
     // defining the type of content S3 will recognize (JSON)
     request.SetContentType("application/json");
 
+    if (is_test().compare("yes") == 0) {
+        std::cout << "[DRY-RUN] This is a test. Recording of " << this->vehicle.vehicle_id << " on S3 ignored." << std::endl;
+        return true; // leaving function without writing on S3
+    }
+
     // making the write request to AWS
     auto outcome = this->s3Client->PutObject(request);
 

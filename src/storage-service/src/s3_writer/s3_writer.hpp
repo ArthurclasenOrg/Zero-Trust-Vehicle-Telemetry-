@@ -5,6 +5,7 @@
 #include <memory>
 #include <sstream>
 #include "../../../common/include/vehicle_telemetry_state.hpp"
+#include "../../../common/include/is_test.hpp"
 
 #ifndef S3_WRITER_HPP
 #define S3_WRITER_HPP

@@ -27,6 +27,7 @@ CONTAINER_ID=$(docker run -d \
   -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
   -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
   -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+  -e IS_TEST="yes" \
   ztv-storage-service:${TAG})
 
 timeout 30s docker logs -f $CONTAINER_ID || true

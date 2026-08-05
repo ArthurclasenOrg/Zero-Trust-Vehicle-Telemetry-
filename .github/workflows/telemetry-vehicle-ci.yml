@@ -153,6 +153,7 @@ jobs:
         if: matrix.service == 'watch-telemetry-svc'
         env:
           IMAGE_TAG: ${{ github.sha }}
+          TABLE_NAME: ${{ secrets.TABLE_NAME }}
         run: chmod +x scripts/test_watch_telemetry.sh && ./scripts/test_watch_telemetry.sh
 
       # logging on github container registry (to post the image)

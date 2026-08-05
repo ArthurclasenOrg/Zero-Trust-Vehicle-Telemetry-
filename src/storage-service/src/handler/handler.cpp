@@ -89,14 +89,12 @@ invocation_response StorageHandler::initializeHandler(invocation_request const& 
 
             // writing on dynamoDB 
             auto dyanmo = std::make_unique<DynamoWritter>(*vehicle, config);
-            dyanmo->dynamoWrite();
-            cout << "Written on dynamo." << endl;
-
+            if (dyanmo->dynamoWrite()) cout << "Written on dynamo." << endl;
+            
             // writing on the s3 bucket
             const Aws::String fileKey = buildS3Key(*vehicle);
             auto s3bucket = std::make_unique<S3Writer>(fileKey, *vehicle, config);
-            s3bucket->s3Write();
-            cout << "Written on bucket" << endl;
+            if (s3bucket->s3Write()) cout << "Written on bucket" << endl;
         }
 
         cout << "Finished processing. AWS is cleaning the queue" << endl;

@@ -17,6 +17,28 @@ int main()
     // options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options); // initializing API
 
+    if (is_test().compare("yes") == 0){ // for github actions test
+        cout << "[TEST MODE] local test simulating SQS..." << std::endl;
+        
+        auto handler = std::make_unique<StorageHandler>();
+
+        aws::lambda_runtime::invocation_request request;
+        request.payload = R"({
+            "Records": [
+                {
+                    "body": "{\"vehicle_id\":\"vehicle-01\", \"status\":\"anomaly\", \"rpm\":6000}"
+                }
+            ]
+        })";
+
+        auto response = handler->initializeHandler(request);
+        std::cout << "1. Sucess? " << response.is_success() << std::endl;
+        std::cout << "2. Body: " << response.get_payload() << std::endl;
+        
+        Aws::ShutdownAPI(options);
+        return 0;
+    }
+
     // processing from sqs queue and deleting message later
     auto handler = std::make_unique<StorageHandler>();
     

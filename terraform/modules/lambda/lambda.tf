@@ -33,6 +33,7 @@ resource "aws_lambda_function" "store_car_svc" {
     variables = {
       BUCKET_NAME = "zero-trust-vehicle-telemetry-${var.aws_account_id}",
       TABLE_NAME = var.table_name
+      IS_TEST = "no"
     }
   }
 
@@ -76,6 +77,7 @@ resource "aws_lambda_function" "watch_telemetry_svc" {
   environment {
     variables = {
       TABLE_NAME = var.table_name
+      IS_TEST = "no"
     }
   }
 
@@ -92,7 +94,7 @@ resource "aws_lambda_function" "public_panel_svc" {
   function_name = var.public_panel_func_name
   role = var.public_panel_role_arn
   package_type = "Image" # defining this as a running container image function
-  image_uri = local.placeholder_image_public
+  image_uri = local.placeholder_image_watch
 
   memory_size = 512
   timeout = 30

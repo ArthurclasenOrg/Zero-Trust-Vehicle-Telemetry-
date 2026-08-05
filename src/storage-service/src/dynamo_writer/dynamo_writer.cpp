@@ -60,6 +60,11 @@ bool DynamoWritter::dynamoWrite()
     putItemRequest.AddItem("last_seen_epoch_ms", lastSeenEpochMsAttr);
     //--------------------------------------------
 
+    if (is_test().compare("yes") == 0) {
+        std::cout << "[DRY-RUN] This is a test. Recording of " << this->vehicle.vehicle_id << " on DynamoDB ignored." << std::endl;
+        return true; // leaving function without writing on dynamoDB
+    }
+
     // making the request (write) to AWS
     const auto outcome = this->dynamoClient->PutItem(putItemRequest);
 
