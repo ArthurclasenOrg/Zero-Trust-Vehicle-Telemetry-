@@ -221,6 +221,8 @@ jobs:
           cd terraform
 
           export TF_VAR_aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+
+          export TF_VAR_table_name="${{ secrets.TABLE_NAME }}"
           
           echo "Starting Terraform on AWS account: $TF_VAR_aws_account_id"
 
